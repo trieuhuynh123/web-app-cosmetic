@@ -26,6 +26,9 @@ export class User {
   password: string;
 
   @Prop()
+  address: string;
+
+  @Prop()
   refresh_token: string;
 }
 

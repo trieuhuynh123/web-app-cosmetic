@@ -33,6 +33,7 @@ export class RefreshAuthGuard implements CanActivate {
         id: user._id,
         name: user.name,
         email: user.email,
+        address: user.address,
       };
       request['access_token'] = await this.jwtService.signAsync(payloadAccess);
     } catch {

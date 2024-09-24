@@ -18,7 +18,12 @@ export class AuthService {
     if (user?.password !== pass) {
       throw new UnauthorizedException();
     }
-    const payloadAccess = { id: user._id, name: user.name, email: user.email };
+    const payloadAccess = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      address: user.address,
+    };
 
     const refresh_token = await this.getOrCreateRefreshToken(user);
 
