@@ -12,7 +12,7 @@ const RegisterScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-
+  const [address, setAddress] = useState("");
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -30,20 +30,17 @@ const RegisterScreen = () => {
       return;
     }
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/users`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            name: name,
-            email: email,
-            password: password,
-          }).toString(),
-        }
-      );
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          name: name,
+          email: email,
+          password: password,
+        }).toString(),
+      });
 
       const responseData = await response.text(); // or response.json() if you return JSON
       setMessage(responseData);
@@ -73,6 +70,13 @@ const RegisterScreen = () => {
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
+        secureTextEntry
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Address"
+        value={address}
+        onChangeText={setAddress}
         secureTextEntry
       />
       {message ? <Text style={styles.message}>{message}</Text> : null}

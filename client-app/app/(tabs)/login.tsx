@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-
+import * as SecureStore from "expo-secure-store";
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +15,7 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/users/login`,
+        `${process.env.EXPO_PUBLIC_API_URL}/auth/login`,
         {
           method: "POST",
           headers: {
@@ -27,9 +27,25 @@ const LoginScreen = () => {
           }).toString(),
         }
       );
-
-      const responseData = await response.text(); // or response.json() if you return JSON
-      setMessage(responseData);
+      const data = await response.json();
+      if (!response.ok) {
+        const errorMessage = data.message || "Unknown error occurred";
+        setMessage(errorMessage);
+      } else {
+        await SecureStore.setItemAsync("loggedIn", "true");
+        await SecureStore.setItemAsync(
+          "cosmetic_access_token",
+          data.access_token
+        );
+        await SecureStore.setItemAsync(
+          "cosmetic_refresh_token",
+          data.refresh_token
+        );
+        setEmail("");
+        setMessage("");
+        setPassword("");
+        router.back();
+      }
     } catch (error) {
       console.error("Error:", error);
     }
@@ -59,7 +75,7 @@ const LoginScreen = () => {
 
       <TouchableOpacity
         onPress={() => {
-          router.push("../register");
+          router.push("/register");
         }}
       >
         <Text style={styles.register}>Don't have an account? Sign Up</Text>

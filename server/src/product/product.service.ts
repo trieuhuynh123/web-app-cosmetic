@@ -63,8 +63,17 @@ export class ProductService {
   }
 
   async getRandomProducts(): Promise<Product[]> {
-    return this.productModel.aggregate([
+    const products = await this.productModel.aggregate([
       { $sample: { size: 10 } }, // Lấy ngẫu nhiên 10 sản phẩm
     ]);
+
+    // Ánh xạ để chuyển đổi _id thành id và xóa _id
+    return products.map((product) => {
+      const { _id, ...rest } = product;
+      return {
+        id: _id, // Thêm id từ _id
+        ...rest,
+      };
+    });
   }
 }

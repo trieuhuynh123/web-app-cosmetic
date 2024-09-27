@@ -136,7 +136,6 @@ const SearchPage = () => {
       const response = await fetch(url, {
         method: "GET",
       });
-      console.log(url);
       const data = await response.json();
       return data;
     } catch (error) {
@@ -343,7 +342,7 @@ const SearchPage = () => {
               />
             </View>
           )}
-          contentContainerStyle={{ paddingBottom: 250 }}
+          contentContainerStyle={{ paddingBottom: 400 }}
           keyExtractor={(item) => item.id.toString()}
           onEndReached={loadMoreProducts} // Tải thêm khi cuộn đến gần cuối
           onEndReachedThreshold={0.1} // Ngưỡng để gọi loadMoreProducts

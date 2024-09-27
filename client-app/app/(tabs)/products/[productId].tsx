@@ -1,5 +1,5 @@
 // ProductDetail.js
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -20,9 +20,9 @@ const ProductDetail = ({}) => {
   const [product, setProduct] = useState<Product>();
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-
   useEffect(() => {
     const fetchProduct = async () => {
+
       try {
         const response = await fetch(
           `${process.env.EXPO_PUBLIC_API_URL}/products/${productId}`,
@@ -92,7 +92,12 @@ const ProductDetail = ({}) => {
             <Text className="text-lg font-bold">+</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity className="bg-blue-500 p-4 rounded mt-4">
+        <TouchableOpacity
+          className="bg-blue-500 p-4 rounded mt-4"
+          onPress={() => {
+            router.back();
+          }}
+        >
           <Text className="text-white text-center text-lg font-bold">
             Thêm vào giỏ hàng
           </Text>

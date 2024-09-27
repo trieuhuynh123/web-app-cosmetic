@@ -15,8 +15,14 @@ export class AuthService {
     pass: string,
   ): Promise<{ access_token: string; refresh_token: string }> {
     const user = await this.userService.findByEmail(email);
-    if (user?.password !== pass) {
-      throw new UnauthorizedException();
+    // Kiểm tra nếu user không tồn tại
+    if (!user) {
+      throw new UnauthorizedException('User does not exist');
+    }
+
+    // Kiểm tra nếu mật khẩu không đúng
+    if (user.password !== pass) {
+      throw new UnauthorizedException('Incorrect password');
     }
     const payloadAccess = {
       id: user._id,

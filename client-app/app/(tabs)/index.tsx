@@ -7,8 +7,7 @@ import {
   View,
   Image,
 } from "react-native";
-import * as NavigationBar from "expo-navigation-bar";
-import AntDesign from "@expo/vector-icons/AntDesign";
+
 import { router } from "expo-router";
 import { ProductItem } from "@/components/ProductItem";
 interface Category {
@@ -47,7 +46,6 @@ export default function App() {
           `${process.env.EXPO_PUBLIC_API_URL}/products/random`
         );
         const data = await response.json();
-
         setProducts(data);
       } catch (error) {
         console.log(error);
@@ -79,9 +77,7 @@ export default function App() {
     } finally {
     }
   };
-  const handleSignUp = () => {
-    router.push("../login");
-  };
+
   return (
     <ScrollView className="flex-1 bg-white px-4">
       {/* Thanh tìm kiếm */}
@@ -93,14 +89,6 @@ export default function App() {
           onChangeText={setInputSearch}
           onSubmitEditing={handleSubmitSearch}
         />
-        <TouchableOpacity className="ml-3 p-2">
-          <AntDesign
-            name="user"
-            size={24}
-            color="black"
-            onPress={handleSignUp}
-          />
-        </TouchableOpacity>
       </View>
 
       {/* Banner quảng cáo */}
@@ -139,13 +127,14 @@ export default function App() {
       <Text className="text-lg font-bold mb-3">Sản phẩm</Text>
       <View className="flex-row flex-wrap justify-between">
         {products.map((product, index) => (
-          <ProductItem
-            key={index}
-            id={product.id}
-            image={product.image}
-            name={product.name}
-            price={product.price}
-          />
+          <View className="w-[48%]" key={index}>
+            <ProductItem
+              id={product.id}
+              image={product.image}
+              name={product.name}
+              price={product.price}
+            />
+          </View>
         ))}
       </View>
     </ScrollView>
