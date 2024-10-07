@@ -33,4 +33,18 @@ export class AuthController {
   refresh(@Request() req) {
     return req.access_token;
   }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    return this.authService.forgotPassword(email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body('otp') otp: string,
+    @Body('newPassword') newPassword: string,
+    @Body('otpToken') otpToken: string,
+  ) {
+    return this.authService.resetPassword(otp, newPassword, otpToken);
+  }
 }
