@@ -25,4 +25,11 @@ export class UserService {
   async update(id: string, user: User): Promise<User> {
     return await this.userModel.findByIdAndUpdate(id, user, { new: true });
   }
+  async updatePassword(id: string, newPassword: string): Promise<User> {
+    return await this.userModel.findByIdAndUpdate(
+      id,
+      { password: newPassword },
+      { new: true },
+    );
+  }
 }
