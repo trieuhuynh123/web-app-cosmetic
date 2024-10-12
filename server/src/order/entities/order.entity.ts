@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { OrderDetail } from './order-detail.entity';
 
-export type ProductDocument = HydratedDocument<Product>;
+export type OrderDocument = HydratedDocument<Order>;
 
 @Schema({
   toJSON: {
@@ -13,24 +14,18 @@ export type ProductDocument = HydratedDocument<Product>;
     },
   },
 })
-export class Product {
-  @Prop({ required: true })
-  name: string;
+export class Order {
+  @Prop({ type: String, ref: 'User' })
+  user: string;
 
   @Prop({ required: true })
-  price: number;
-
-  @Prop({ type: String, ref: 'Category' })
-  category: string;
-
-  @Prop({ type: String, ref: 'Brand' })
-  brand: string;
-
-  @Prop({ default: 0 })
-  sold: number;
+  purchaseDate: Date;
 
   @Prop({ required: true })
-  image: string;
+  totalAmount: number;
+
+  @Prop({ type: OrderDetail, ref: 'OrderDetail' })
+  orderDetails: string[];
 }
 
-export const ProductEntity = SchemaFactory.createForClass(Product);
+export const OrderEntity = SchemaFactory.createForClass(Order);
