@@ -8,7 +8,7 @@ import { ProductModule } from './product/product.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-
+import { CartModule } from './cart/cart.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,8 +20,9 @@ import { UserModule } from './user/user.module';
     ProductModule,
     AuthModule,
     UserModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
