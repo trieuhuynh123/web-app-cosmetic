@@ -8,13 +8,11 @@ import { Product } from './entities/product.entity';
 export class ProductService {
   constructor(
     @InjectModel(Product.name) private productModel: Model<Product>,
-  ) {}
+  ) { }
 
   async findOne(id: string): Promise<Product> {
     return await this.productModel
       .findById(id)
-      .populate('category')
-      .populate('brand')
       .exec();
   }
 
