@@ -125,7 +125,7 @@ export default function App() {
 
       {/* Sản phẩm */}
       <Text className="text-lg font-bold mb-3">Sản phẩm</Text>
-      <View className="flex-row flex-wrap justify-between">
+      <View className="flex-row flex-wrap justify-between mb-28">
         {products.map((product, index) => (
           <View className="w-[48%]" key={index}>
             <ProductItem
