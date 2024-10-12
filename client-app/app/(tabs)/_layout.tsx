@@ -67,16 +67,15 @@ const Layout = () => {
   return (
     <>
       <Tabs
-      
         backBehavior="history"
         screenOptions={{
           headerShown: false,
           tabBarShowLabel: false,
           tabBarStyle: {
             position: "absolute",
-            bottom: 27,
-            left: 16,
-            right: 16,
+            bottom: 0,
+            left: 0,
+            right: 0,
             height: 72,
             elevation: 0,
             backgroundColor: "white",
@@ -214,6 +213,7 @@ const Layout = () => {
           }}
         />
       </Tabs>
+
     </>
   );
 };

@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
+import * as SecureStore from "expo-secure-store";
+import RatingComponent from "@/components/RatingComponent";
 interface Product {
   id: number;
   name: string;
@@ -20,9 +22,9 @@ const ProductDetail = ({}) => {
   const [product, setProduct] = useState<Product>();
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [purchaseStatus, setPurchaseStatus] = useState<boolean>();
   useEffect(() => {
     const fetchProduct = async () => {
-
       try {
         const response = await fetch(
           `${process.env.EXPO_PUBLIC_API_URL}/products/${productId}`,
@@ -38,7 +40,34 @@ const ProductDetail = ({}) => {
         setLoading(false);
       }
     };
+    const checkPurchasedProduct = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/orders/check-purchase`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${await SecureStore.getItemAsync(
+                "cosmetic_access_token"
+              )}`,
+            },
+            body: JSON.stringify({ productId }), // Gửi productId trong body
+          }
+        );
+        const data = await response.json();
+
+        if (data.purchased === true) {
+          setPurchaseStatus(true);
+        } else {
+          setPurchaseStatus(false);
+        }
+      } catch (error) {
+        setPurchaseStatus(false);
+      }
+    };
     fetchProduct();
+    checkPurchasedProduct();
   }, [productId]);
 
   const handleIncrease = () => {
@@ -103,6 +132,7 @@ const ProductDetail = ({}) => {
           </Text>
         </TouchableOpacity>
       </View>
+      <View className="mb-20">{purchaseStatus && <RatingComponent />}</View>
     </ScrollView>
   );
 };

@@ -308,7 +308,7 @@ const SearchPage = () => {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="flex-row h-40"
+        className="flex-row h-40 mt-3"
       >
         {hotProducts.map((product, index) => (
           <TouchableOpacity
