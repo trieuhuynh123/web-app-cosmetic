@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Model } from 'mongoose';
-import { Order } from './entities/order.entity';
+import { Order, OrderStatus } from './entities/order.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Product, ProductDocument } from 'src/product/entities/product.entity';
 interface LineItem {
@@ -54,11 +58,48 @@ export class OrderService {
     // Tạo đơn hàng mới
     const newOrder = new this.orderModel({
       user: userId, // ID của người dùng
-      purchaseDate: new Date(), // Ngày mua
       totalAmount, // Tổng số tiền
       orderDetails, // Chi tiết đơn hàng
     });
 
     return newOrder.save(); // Lưu đơn hàng vào cơ sở dữ liệu
+  }
+
+  async getOrdersByStatusAndUser(
+    userId: string,
+    status?: OrderStatus,
+  ): Promise<Order[]> {
+    const filter: any = { user: userId };
+
+    if (status) {
+      filter.status = status;
+    }
+
+    return this.orderModel.find(filter).exec();
+  }
+  async cancelOrder(orderId: string, userId: string): Promise<Order> {
+    const order = await this.orderModel.findOne({ id: orderId, user: userId });
+
+    if (!order) {
+      throw new BadRequestException(
+        'Order not found or you are not authorized to cancel this order.',
+      );
+    }
+
+    // Kiểm tra nếu đơn hàng đã quá 30 phút
+    const now = new Date();
+    const orderCreatedTime = new Date(order.createDate);
+    const diffInMinutes =
+      (now.getTime() - orderCreatedTime.getTime()) / (1000 * 60); // tính thời gian chênh lệch bằng phút
+
+    if (diffInMinutes > 30) {
+      throw new BadRequestException(
+        'Order cannot be canceled after 30 minutes.',
+      );
+    }
+
+    // Cập nhật trạng thái đơn hàng thành "canceled"
+    order.status = OrderStatus.CANCELLED;
+    return order.save(); // Lưu trạng thái mới vào cơ sở dữ liệu
   }
 }

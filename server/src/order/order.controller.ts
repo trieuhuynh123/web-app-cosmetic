@@ -1,6 +1,15 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { OrderService } from './order.service';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { OrderStatus } from './entities/order.entity';
 interface LineItem {
   productId: string; // ID của sản phẩm
   quantity: number; // Số lượng của sản phẩm
@@ -29,5 +38,25 @@ export class OrderController {
       productId,
     );
     return { purchased: hasPurchased };
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('filter')
+  async filterOrders(
+    @Req() req, // Lấy thông tin người dùng từ JWT
+    @Query('status') status: OrderStatus, // Lọc theo status, nếu có
+  ) {
+    const userId = req.user.id; // Lấy userId từ token JWT
+    return this.orderService.getOrdersByStatusAndUser(userId, status);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('cancel')
+  async cancelOrders(
+    @Req() req, // Lấy thông tin người dùng từ JWT
+    @Body('orderId') orderId: string, // Lọc theo status, nếu có
+  ) {
+    const userId = req.user.id; // Lấy userId từ token JWT
+    return this.orderService.cancelOrder(orderId, userId);
   }
 }
