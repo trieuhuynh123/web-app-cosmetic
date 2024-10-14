@@ -1,10 +1,24 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
-import { OrderDetail } from './order-detail.entity';
+import { HydratedDocument, Types } from 'mongoose';
+import { OrderDetail, OrderDetailSchema } from './order-detail.entity';
+import { User } from '../../user/entities/user.entity';
 
 export type OrderDocument = HydratedDocument<Order>;
 
+export enum PaymentMethod {
+  COD = 'COD',
+  MOMO = 'MOMO',
+  // Có thể thêm các phương thức khác ở đây
+}
+
+export enum OrderStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
 @Schema({
+  timestamps: true, // Tự động thêm createdAt và updatedAt
   toJSON: {
     virtuals: true, // Bật các virtual fields
     versionKey: false, // Loại bỏ __v
@@ -15,17 +29,23 @@ export type OrderDocument = HydratedDocument<Order>;
   },
 })
 export class Order {
-  @Prop({ type: String, ref: 'User' })
-  user: string;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  user: User | string;
 
-  @Prop({ required: true })
-  purchaseDate: Date;
+  @Prop({ type: [OrderDetailSchema], required: true })
+  orderDetails: OrderDetail[];
 
   @Prop({ required: true })
   totalAmount: number;
 
-  @Prop({ type: OrderDetail, ref: 'OrderDetail' })
-  orderDetails: string[];
+  @Prop({ required: true, enum: PaymentMethod })
+  paymentMethod: PaymentMethod;
+
+  @Prop({ enum: OrderStatus, default: OrderStatus.PENDING })
+  status: OrderStatus;
+
+  @Prop()
+  momoPaymentUrl?: string; // URL thanh toán Momo
 }
 
-export const OrderEntity = SchemaFactory.createForClass(Order);
+export const OrderSchema = SchemaFactory.createForClass(Order);

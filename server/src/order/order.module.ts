@@ -2,20 +2,26 @@ import { Module } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { OrderController } from './order.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Order, OrderEntity } from './entities/order.entity';
-import { Product, ProductEntity } from 'src/product/entities/product.entity';
-import { AuthModule } from 'src/auth/auth.module';
+import { Order, OrderSchema } from './entities/order.entity';
+import { OrderDetail, OrderDetailSchema } from './entities/order-detail.entity';
+import { ProductModule } from '../product/product.module';
+import { CartModule } from '../cart/cart.module';
+import { UserModule } from '../user/user.module';
+import { MomoService } from './momo.service';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Order.name, schema: OrderEntity },
-
-      { name: Product.name, schema: ProductEntity },
+      { name: Order.name, schema: OrderSchema },
+      { name: OrderDetail.name, schema: OrderDetailSchema },
     ]),
-    AuthModule,
+    ProductModule,
+    CartModule,
+    UserModule,
+    ConfigModule, // Import ConfigModule để sử dụng biến môi trường
   ],
+  providers: [OrderService, MomoService],
   controllers: [OrderController],
-  providers: [OrderService],
 })
-export class OrderModule {}
+export class OrderModule { }

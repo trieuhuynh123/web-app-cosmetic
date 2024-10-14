@@ -1,23 +1,93 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { Model } from 'mongoose';
-import { Order } from './entities/order.entity';
 import { InjectModel } from '@nestjs/mongoose';
-import { Product, ProductDocument } from 'src/product/entities/product.entity';
-interface LineItem {
-  productId: string; // ID của sản phẩm
-  quantity: number; // Số lượng của sản phẩm
-}
+import { Order, OrderDocument, PaymentMethod, OrderStatus } from './entities/order.entity';
+import { CartService } from '../cart/cart.service';
+import { MomoService } from './momo.service';
+import { CartItem } from '../cart/schemas/cart-item.schema';
+
 @Injectable()
 export class OrderService {
   constructor(
-    @InjectModel(Order.name) private orderModel: Model<Order>,
-    @InjectModel(Product.name) private productModel: Model<ProductDocument>,
-  ) {}
+    @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
+    private cartService: CartService,
+    private momoService: MomoService,
+  ) { }
 
-  async hasPurchasedProduct(
-    userId: string,
-    productId: string,
-  ): Promise<boolean> {
+  // Tạo đơn hàng từ giỏ hàng
+  async createOrder(userId: string, paymentMethod: PaymentMethod): Promise<Order> {
+    // Lấy giỏ hàng của người dùng
+    const cart = await this.cartService.getCartByUserId(userId);
+    if (!cart || cart.items.length === 0) {
+      throw new BadRequestException('Giỏ hàng của bạn đang trống.');
+    }
+
+    // Chuyển đổi CartItems thành OrderDetails
+    const orderDetails: CartItem[] = cart.items.map(item => ({
+      product: typeof item.product === 'string' ? item.product : item.product._id.toString(),
+      quantity: item.quantity,
+      price: typeof item.product === 'string' ? 0 : item.product.price,
+    }));
+
+    // Tính tổng tiền
+    const totalAmount = cart.items.reduce((sum, item) => {
+      const price = typeof item.product === 'string' ? 0 : item.product.price;
+      return sum + price * item.quantity;
+    }, 0);
+
+    // Tạo đơn hàng mới
+    const newOrder = new this.orderModel({
+      user: userId,
+      orderDetails,
+      totalAmount,
+      paymentMethod,
+      status: OrderStatus.PENDING,
+    });
+
+    // Nếu phương thức thanh toán là Momo, tạo URL thanh toán
+    if (paymentMethod === PaymentMethod.MOMO) {
+      const momoPaymentUrl = await this.momoService.createPayment(newOrder);
+      newOrder.momoPaymentUrl = momoPaymentUrl;
+    }
+
+    // Lưu đơn hàng vào cơ sở dữ liệu
+    await newOrder.save();
+
+    // Xóa giỏ hàng sau khi đặt hàng thành công
+    await this.cartService.clearCart(userId);
+
+    return newOrder;
+  }
+
+  // Lấy đơn hàng theo ID
+  async findOrderById(orderId: string): Promise<Order> {
+    const order = await this.orderModel.findById(orderId).populate('orderDetails.product').exec();
+    if (!order) {
+      throw new NotFoundException('Không tìm thấy đơn hàng.');
+    }
+    return order;
+  }
+
+  // Xử lý thông báo IPN từ Momo
+  async handleMomoIpn(data: any): Promise<void> {
+    const { orderId, status } = data;
+    const order = await this.orderModel.findById(orderId).exec();
+    if (!order) {
+      throw new NotFoundException('Đơn hàng không tồn tại.');
+    }
+
+    if (status === 'SUCCESS') {
+      order.status = OrderStatus.COMPLETED;
+      // Có thể cập nhật thêm các thông tin khác nếu cần
+    } else {
+      order.status = OrderStatus.CANCELLED;
+    }
+
+    await order.save();
+  }
+
+  // Kiểm tra sản phẩm đã mua
+  async hasPurchasedProduct(userId: string, productId: string): Promise<boolean> {
     const order = await this.orderModel
       .findOne({
         user: userId,
@@ -26,39 +96,5 @@ export class OrderService {
       .exec();
 
     return !!order;
-  }
-
-  async create(userId: string, lineItems: LineItem[]): Promise<Order> {
-    let totalAmount = 0;
-    const orderDetails = [];
-
-    for (const item of lineItems) {
-      const product = await this.productModel.findById(item.productId).exec();
-      if (!product) {
-        throw new NotFoundException(
-          `Product with ID ${item.productId} not found`,
-        );
-      }
-
-      const totalPriceForItem = product.price * item.quantity; // Tính tổng tiền cho từng mục
-      totalAmount += totalPriceForItem;
-
-      // Thêm vào chi tiết đơn hàng
-      orderDetails.push({
-        product: product.id, // ID sản phẩm
-        price: product.price, // Giá sản phẩm
-        quantity: item.quantity, // Số lượng sản phẩm
-      });
-    }
-
-    // Tạo đơn hàng mới
-    const newOrder = new this.orderModel({
-      user: userId, // ID của người dùng
-      purchaseDate: new Date(), // Ngày mua
-      totalAmount, // Tổng số tiền
-      orderDetails, // Chi tiết đơn hàng
-    });
-
-    return newOrder.save(); // Lưu đơn hàng vào cơ sở dữ liệu
   }
 }

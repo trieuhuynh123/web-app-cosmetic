@@ -1,3 +1,5 @@
+// src/cart/cart.module.ts
+
 import { Module } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { CartController } from './cart.controller';
@@ -14,5 +16,6 @@ import { ProductModule } from '../product/product.module';
     ],
     providers: [CartService],
     controllers: [CartController],
+    exports: [CartService], // **Thêm dòng này để export CartService**
 })
 export class CartModule { }
