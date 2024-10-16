@@ -1,19 +1,20 @@
-import React, { useEffect, useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
-import { View, Text, Alert } from "react-native";
+import { View, Text } from "react-native";
 import * as SecureStore from "expo-secure-store";
-import { CartProvider } from "../context/CartContext"; // Đảm bảo đường dẫn đúng
-import CartTabIcon from "@/components/CartTabIcon"; // Import thành phần tùy chỉnh
-
-const Layout: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+import { useEffect, useState } from "react";
+const Layout = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const checkLoginStatus = async () => {
-    const token = await SecureStore.getItemAsync("cosmetic_refresh_token");
-    setIsLoggedIn(!!token);
+    if (await SecureStore.getItemAsync("cosmetic_refresh_token")) {
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+    }
   };
 
+  checkLoginStatus();
   // Định nghĩa hàm refresh token
   const refreshTokenHandler = async () => {
     const refreshToken = await SecureStore.getItemAsync("cosmetic_refresh_token");
@@ -29,7 +30,9 @@ const Layout: React.FC = () => {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${refreshToken}`,
+            Authorization: `Bearer ${await SecureStore.getItemAsync(
+              "cosmetic_refresh_token"
+            )}`,
             "Content-Type": "application/x-www-form-urlencoded",
           },
           body: new URLSearchParams({
@@ -46,28 +49,21 @@ const Layout: React.FC = () => {
         setIsLoggedIn(false);
         await SecureStore.deleteItemAsync("cosmetic_refresh_token");
       }
-    } catch (error: unknown) {
-      // Sử dụng type guards
+    } catch (error) {
       console.log(error);
-      if (error instanceof Error) {
-        Alert.alert("Error", error.message || "Lỗi khi làm mới token.");
-      } else {
-        Alert.alert("Error", "Lỗi khi làm mới token.");
-      }
     }
   };
 
   useEffect(() => {
-    checkLoginStatus();
     refreshTokenHandler();
     const intervalId = setInterval(async () => {
-      await refreshTokenHandler();
-    }, 840000); // 14 phút
+      refreshTokenHandler();
+    }, 840000);
     return () => clearInterval(intervalId);
   }, []);
 
   return (
-    <CartProvider>
+    <>
       <Tabs
         backBehavior="history"
         screenOptions={{
@@ -146,7 +142,29 @@ const Layout: React.FC = () => {
         <Tabs.Screen
           name="cart"
           options={{
-            tabBarIcon: ({ focused }) => <CartTabIcon focused={focused} />, // Sử dụng thành phần tùy chỉnh
+            tabBarIcon: ({ focused }) => (
+              <View
+                style={{
+                  alignItems: "center",
+                  paddingTop: 10,
+                }}
+              >
+                <Ionicons
+                  name={focused ? "cart" : "cart-outline"}
+                  color={focused ? "#0F8BBD0" : "pink"}
+                  size={24}
+                />
+                <Text
+                  style={{
+                    color: focused ? "#0F8BBD0" : "pink",
+                    fontSize: 12,
+                    marginTop: 4,
+                  }}
+                >
+                  Cart
+                </Text>
+              </View>
+            ),
           }}
         />
         <Tabs.Screen
@@ -221,7 +239,7 @@ const Layout: React.FC = () => {
           }}
         />
       </Tabs>
-    </CartProvider>
+    </>
   );
 };
 
