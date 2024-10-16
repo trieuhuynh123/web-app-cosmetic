@@ -1,25 +1,23 @@
+// app/_layout.tsx
+import React, { useEffect, useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
-import { View, Text } from "react-native";
+import { View, Text, Alert } from "react-native";
 import * as SecureStore from "expo-secure-store";
-import { useEffect, useState } from "react";
-const Layout = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+import { CartProvider } from "../context/CartContext"; // Đảm bảo đường dẫn đúng
+import CartTabIcon from "@/components/CartTabIcon"; // Import thành phần tùy chỉnh
+
+const Layout: React.FC = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   const checkLoginStatus = async () => {
-    if (await SecureStore.getItemAsync("cosmetic_refresh_token")) {
-      setIsLoggedIn(true);
-    } else {
-      setIsLoggedIn(false);
-    }
+    const token = await SecureStore.getItemAsync("cosmetic_refresh_token");
+    setIsLoggedIn(!!token);
   };
 
-  checkLoginStatus();
   // Định nghĩa hàm refresh token
   const refreshTokenHandler = async () => {
-    const refreshToken = await SecureStore.getItemAsync(
-      "cosmetic_refresh_token"
-    );
+    const refreshToken = await SecureStore.getItemAsync("cosmetic_refresh_token");
 
     if (!refreshToken) {
       setIsLoggedIn(false);
@@ -27,21 +25,16 @@ const Layout = () => {
     }
 
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/auth/refresh`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${await SecureStore.getItemAsync(
-              "cosmetic_refresh_token"
-            )}`,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            refresh_token: refreshToken,
-          }).toString(),
-        }
-      );
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/auth/refresh`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${refreshToken}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          refresh_token: refreshToken,
+        }).toString(),
+      });
 
       const data = await response.text();
       if (response.ok) {
@@ -51,21 +44,27 @@ const Layout = () => {
         setIsLoggedIn(false);
         await SecureStore.deleteItemAsync("cosmetic_refresh_token");
       }
-    } catch (error) {
+    } catch (error: unknown) { // Sử dụng type guards
       console.log(error);
+      if (error instanceof Error) {
+        Alert.alert("Error", error.message || "Lỗi khi làm mới token.");
+      } else {
+        Alert.alert("Error", "Lỗi khi làm mới token.");
+      }
     }
   };
 
   useEffect(() => {
+    checkLoginStatus();
     refreshTokenHandler();
     const intervalId = setInterval(async () => {
-      refreshTokenHandler();
-    }, 840000);
+      await refreshTokenHandler();
+    }, 840000); // 14 phút
     return () => clearInterval(intervalId);
   }, []);
 
   return (
-    <>
+    <CartProvider>
       <Tabs
         backBehavior="history"
         screenOptions={{
@@ -142,6 +141,12 @@ const Layout = () => {
           }}
         />
         <Tabs.Screen
+          name="cart"
+          options={{
+            tabBarIcon: ({ focused }) => <CartTabIcon focused={focused} />, // Sử dụng thành phần tùy chỉnh
+          }}
+        />
+        <Tabs.Screen
           name="profile"
           options={{
             tabBarIcon: ({ focused }) => (
@@ -213,8 +218,7 @@ const Layout = () => {
           }}
         />
       </Tabs>
-
-    </>
+    </CartProvider>
   );
 };
 
