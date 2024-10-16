@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './entities/user.entity';
 import { Model } from 'mongoose';
@@ -18,6 +18,14 @@ export class UserService {
   }
 
   async create(user: User): Promise<User> {
+    const existingUser = await this.userModel.findOne({ email: user.email });
+    if (existingUser) {
+      throw new HttpException(
+        'Email đã tồn tại. Vui lòng sử dụng email khác.',
+        HttpStatus.CONFLICT,
+      );
+    }
+
     const newUser = new this.userModel(user);
     return await newUser.save();
   }

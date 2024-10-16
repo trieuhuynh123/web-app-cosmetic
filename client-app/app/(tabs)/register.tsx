@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   View,
@@ -41,9 +42,14 @@ const RegisterScreen = () => {
           password: password,
         }).toString(),
       });
-
-      const responseData = await response.text(); // or response.json() if you return JSON
-      setMessage(responseData);
+      if (!response.ok) {
+        // Lấy mã lỗi và thông báo
+        const responseData = await response.json();
+        setMessage(responseData.message);
+      } else {
+        setMessage("");
+        router.push("/login");
+      }
     } catch (error) {
       console.error("Error:", error);
     }
