@@ -78,4 +78,10 @@ export class CartService {
         await cart.save();
         return cart;
     }
+    async clearCart(userId: string): Promise<CartDocument> {
+        const cart = await this.getCartByUserId(userId);
+        cart.items = [];
+        await cart.save();
+        return cart;
+    }
 }

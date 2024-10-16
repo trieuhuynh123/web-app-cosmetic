@@ -1,33 +1,58 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+// src/order/order.controller.ts
+
+import { Body, Controller, Post, Req, UseGuards, Patch } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { AuthGuard } from 'src/auth/auth.guard';
-interface LineItem {
-  productId: string; // ID của sản phẩm
-  quantity: number; // Số lượng của sản phẩm
+import { PaymentMethod } from './enums/payment-method.enum';
+
+interface CheckoutRequest {
+  paymentMethod: PaymentMethod;
+}
+
+interface ConfirmPaymentRequest {
+  orderId: string;
+}
+
+interface DeliveryDetailsRequest {
+  orderId: string;
+  recipientName: string;
+  recipientPhone: string;
+  deliveryAddress: string;
 }
 
 @Controller('orders')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(private readonly orderService: OrderService) { }
 
+  // Tạo đơn hàng từ giỏ hàng
   @UseGuards(AuthGuard)
-  @Post()
-  async createOrder(@Req() req, @Body() lineitems: LineItem[]) {
+  @Post('checkout')
+  async checkout(@Req() req, @Body() checkoutRequest: CheckoutRequest) {
     const userId = req.user.id;
-    return this.orderService.create(userId, lineitems);
+    const { paymentMethod } = checkoutRequest;
+    const result = await this.orderService.checkout(userId, paymentMethod);
+    return result;
   }
 
+  // Xác nhận thanh toán qua QR
   @UseGuards(AuthGuard)
-  @Post('check-purchase')
-  async checkPurchasedProduct(
-    @Req() req,
-    @Body('productId') productId: string,
-  ): Promise<{ purchased: boolean }> {
-    const userId = req.user.id;
-    const hasPurchased = await this.orderService.hasPurchasedProduct(
-      userId,
-      productId,
-    );
-    return { purchased: hasPurchased };
+  @Post('confirm-payment')
+  async confirmPayment(@Body() confirmPaymentRequest: ConfirmPaymentRequest) {
+    const { orderId } = confirmPaymentRequest;
+    const order = await this.orderService.confirmPayment(orderId);
+    return order;
+  }
+
+  // Cập nhật thông tin giao hàng
+  @UseGuards(AuthGuard)
+  @Patch('delivery-details')
+  async updateDeliveryDetails(@Body() deliveryDetailsRequest: DeliveryDetailsRequest) {
+    const { orderId, recipientName, recipientPhone, deliveryAddress } = deliveryDetailsRequest;
+    const updatedOrder = await this.orderService.updateDeliveryDetails(orderId, {
+      recipientName,
+      recipientPhone,
+      deliveryAddress,
+    });
+    return updatedOrder;
   }
 }

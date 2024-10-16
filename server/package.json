@@ -31,6 +31,7 @@
     "bcrypt": "^5.1.1",
     "mongoose": "^8.6.3",
     "nodemailer": "^6.9.15",
+    "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "server": "file:"

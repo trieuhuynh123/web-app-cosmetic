@@ -43,4 +43,5 @@ export class CartController {
         const userId = req.user.id;
         return await this.cartService.removeItemFromCart(userId, productId);
     }
+
 }
