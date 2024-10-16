@@ -20,10 +20,12 @@ export class Product {
   @Prop({ required: true })
   price: number;
 
-  @Prop({ type: String, ref: 'Category' })
+  // Sửa lại kiểu dữ liệu của category và loại bỏ ref
+  @Prop({ required: true })
   category: string;
 
-  @Prop({ type: String, ref: 'Brand' })
+  // Sửa lại kiểu dữ liệu của brand và loại bỏ ref
+  @Prop({ required: true })
   brand: string;
 
   @Prop({ default: 0 })
@@ -31,6 +33,9 @@ export class Product {
 
   @Prop({ required: true })
   image: string;
+
+  @Prop({ required: false })
+  description: string; // Thêm nếu cần
 }
 
 export const ProductEntity = SchemaFactory.createForClass(Product);
