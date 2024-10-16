@@ -8,12 +8,10 @@ import { Product } from './entities/product.entity';
 export class ProductService {
   constructor(
     @InjectModel(Product.name) private productModel: Model<Product>,
-  ) { }
+  ) {}
 
   async findOne(id: string): Promise<Product> {
-    return await this.productModel
-      .findById(id)
-      .exec();
+    return await this.productModel.findById(id).exec();
   }
 
   async create(product: Product): Promise<Product> {

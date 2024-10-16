@@ -13,6 +13,18 @@ const LoginScreen = () => {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const handleLogin = async () => {
+    // Kiểm tra định dạng email
+    const isValidEmail = (email: string) => {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailPattern.test(email);
+    };
+
+    // Kiểm tra xem email có hợp lệ không
+    if (!isValidEmail(email)) {
+      setMessage("Địa chỉ email không hợp lệ");
+      return; // Dừng hàm nếu email không hợp lệ
+    }
+
     try {
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/auth/login`,
@@ -27,6 +39,7 @@ const LoginScreen = () => {
           }).toString(),
         }
       );
+
       const data = await response.json();
       if (!response.ok) {
         const errorMessage = data.message || "Unknown error occurred";

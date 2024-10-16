@@ -26,6 +26,7 @@ export class OrderService {
       .findOne({
         user: userId,
         'orderDetails.product': productId,
+        status: 'delivered',
       })
       .exec();
 
