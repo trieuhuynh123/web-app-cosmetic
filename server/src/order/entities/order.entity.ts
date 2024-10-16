@@ -1,6 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { OrderDetail } from './order-detail.entity';
+export enum OrderStatus {
+  NEW = 'new', // Đơn hàng mới
+  CONFIRMED = 'confirmed', // Đã xác nhận
+  PREPARING = 'preparing', // Đang chuẩn bị hàng
+  SHIPPING = 'shipping', // Đang giao hàng
+  DELIVERED = 'delivered', // Đã giao thành công
+  CANCELLED = 'cancelled', // Hủy đơn hàng
+}
 
 export type OrderDocument = HydratedDocument<Order>;
 
@@ -18,14 +26,17 @@ export class Order {
   @Prop({ type: String, ref: 'User' })
   user: string;
 
-  @Prop({ required: true })
-  purchaseDate: Date;
+  @Prop({ required: true, default: Date.now })
+  createDate: Date;
 
   @Prop({ required: true })
   totalAmount: number;
 
   @Prop({ type: OrderDetail, ref: 'OrderDetail' })
   orderDetails: string[];
+
+  @Prop({ enum: OrderStatus, default: OrderStatus.NEW })
+  status: OrderStatus;
 }
 
 export const OrderEntity = SchemaFactory.createForClass(Order);
