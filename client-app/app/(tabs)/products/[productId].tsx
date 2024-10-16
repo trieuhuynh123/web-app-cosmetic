@@ -11,19 +11,51 @@ import {
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import RatingComponent from "@/components/RatingComponent";
+import OthersReviews from "@/components/OthersReviews";
 interface Product {
   id: number;
   name: string;
   image: string;
   price: number;
 }
+interface Review {
+  rating: number;
+  comment: string;
+  user: {
+    name: string; // Bạn có thể thêm thuộc tính name nếu có
+  };
+}
 const ProductDetail = ({}) => {
   const { productId } = useLocalSearchParams();
+  const productIdString = productId as string;
   const [product, setProduct] = useState<Product>();
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [purchaseStatus, setPurchaseStatus] = useState<boolean>();
+  const [reviews, setReviews] = useState<Review[]>([]);
+
   useEffect(() => {
+    const fetchOthersReviews = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/reviews/find/others?productId=${productId}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${await SecureStore.getItemAsync(
+                "cosmetic_access_token"
+              )}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+        setReviews(data); // Giả sử dữ liệu trả về là mảng đánh giá
+      } catch (error) {
+        console.error("Lỗi khi gọi API:", error);
+      } finally {
+      }
+    };
     const fetchProduct = async () => {
       try {
         const response = await fetch(
@@ -68,6 +100,7 @@ const ProductDetail = ({}) => {
     };
     fetchProduct();
     checkPurchasedProduct();
+    fetchOthersReviews();
   }, [productId]);
 
   const handleIncrease = () => {
@@ -132,7 +165,10 @@ const ProductDetail = ({}) => {
           </Text>
         </TouchableOpacity>
       </View>
-      <View className="mb-20">{purchaseStatus && <RatingComponent />}</View>
+      <View className="mb-20">
+        {purchaseStatus && <RatingComponent productId={productIdString} />}
+        <OthersReviews productId={productIdString} />
+      </View>
     </ScrollView>
   );
 };
