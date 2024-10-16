@@ -1,4 +1,3 @@
-// app/components/CartTabIcon.tsx
 import React, { useContext } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";

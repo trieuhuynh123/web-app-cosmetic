@@ -1,4 +1,3 @@
-// app/_layout.tsx
 import React, { useEffect, useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
@@ -25,16 +24,19 @@ const Layout: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/auth/refresh`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${refreshToken}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          refresh_token: refreshToken,
-        }).toString(),
-      });
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/auth/refresh`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${refreshToken}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            refresh_token: refreshToken,
+          }).toString(),
+        }
+      );
 
       const data = await response.text();
       if (response.ok) {
@@ -44,7 +46,8 @@ const Layout: React.FC = () => {
         setIsLoggedIn(false);
         await SecureStore.deleteItemAsync("cosmetic_refresh_token");
       }
-    } catch (error: unknown) { // Sử dụng type guards
+    } catch (error: unknown) {
+      // Sử dụng type guards
       console.log(error);
       if (error instanceof Error) {
         Alert.alert("Error", error.message || "Lỗi khi làm mới token.");

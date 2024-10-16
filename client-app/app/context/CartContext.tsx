@@ -1,4 +1,3 @@
-// app/context/CartContext.tsx
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import * as SecureStore from "expo-secure-store";
 import { Alert } from "react-native";
@@ -45,7 +44,9 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     // Hàm để lấy giỏ hàng từ backend
     const fetchCart = async () => {
         try {
-            const accessToken = await SecureStore.getItemAsync("cosmetic_access_token");
+            const accessToken = await SecureStore.getItemAsync(
+                "cosmetic_access_token"
+            );
             if (!accessToken) {
                 setCartItems([]);
                 setCartCount(0);
@@ -66,10 +67,17 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
             const data = await response.json();
             setCartItems(data.items);
-            setCartCount(data.items.reduce((acc: number, item: CartItem) => acc + item.quantity, 0));
-        } catch (error: unknown) { // Đặt kiểu của error là unknown
+            setCartCount(
+                data.items.reduce(
+                    (acc: number, item: CartItem) => acc + item.quantity,
+                    0
+                )
+            );
+        } catch (error: unknown) {
+            // Đặt kiểu của error là unknown
             console.log(error);
-            if (error instanceof Error) { // Kiểm tra nếu error là instance của Error
+            if (error instanceof Error) {
+                // Kiểm tra nếu error là instance của Error
                 Alert.alert("Error", error.message || "Không thể tải giỏ hàng.");
             } else {
                 Alert.alert("Error", "Không thể tải giỏ hàng.");
@@ -80,23 +88,28 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     // Hàm để thêm sản phẩm vào giỏ hàng
     const addToCart = async (productId: number, quantity: number) => {
         try {
-            const accessToken = await SecureStore.getItemAsync("cosmetic_access_token");
+            const accessToken = await SecureStore.getItemAsync(
+                "cosmetic_access_token"
+            );
             if (!accessToken) {
                 Alert.alert("Error", "Bạn cần đăng nhập để thêm vào giỏ hàng.");
                 return;
             }
 
-            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/cart/add`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    productId: productId,
-                    quantity: quantity,
-                }),
-            });
+            const response = await fetch(
+                `${process.env.EXPO_PUBLIC_API_URL}/cart/add`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        productId: productId,
+                        quantity: quantity,
+                    }),
+                }
+            );
 
             if (!response.ok) {
                 const errorData = await response.json();
@@ -105,10 +118,15 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
             // Cập nhật giỏ hàng sau khi thêm
             await fetchCart();
-        } catch (error: unknown) { // Đặt kiểu của error là unknown
+        } catch (error: unknown) {
+            // Đặt kiểu của error là unknown
             console.log(error);
-            if (error instanceof Error) { // Kiểm tra nếu error là instance của Error
-                Alert.alert("Error", error.message || "Không thể thêm sản phẩm vào giỏ hàng.");
+            if (error instanceof Error) {
+                // Kiểm tra nếu error là instance của Error
+                Alert.alert(
+                    "Error",
+                    error.message || "Không thể thêm sản phẩm vào giỏ hàng."
+                );
             } else {
                 Alert.alert("Error", "Không thể thêm sản phẩm vào giỏ hàng.");
             }
@@ -118,23 +136,28 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     // Hàm để cập nhật số lượng sản phẩm trong giỏ hàng
     const updateCartItem = async (productId: number, quantity: number) => {
         try {
-            const accessToken = await SecureStore.getItemAsync("cosmetic_access_token");
+            const accessToken = await SecureStore.getItemAsync(
+                "cosmetic_access_token"
+            );
             if (!accessToken) {
                 Alert.alert("Error", "Bạn cần đăng nhập để cập nhật giỏ hàng.");
                 return;
             }
 
-            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/cart/update`, {
-                method: "PATCH",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    productId: productId,
-                    quantity: quantity,
-                }),
-            });
+            const response = await fetch(
+                `${process.env.EXPO_PUBLIC_API_URL}/cart/update`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        productId: productId,
+                        quantity: quantity,
+                    }),
+                }
+            );
 
             if (!response.ok) {
                 const errorData = await response.json();
@@ -143,9 +166,11 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
             // Cập nhật giỏ hàng sau khi cập nhật
             await fetchCart();
-        } catch (error: unknown) { // Đặt kiểu của error là unknown
+        } catch (error: unknown) {
+            // Đặt kiểu của error là unknown
             console.log(error);
-            if (error instanceof Error) { // Kiểm tra nếu error là instance của Error
+            if (error instanceof Error) {
+                // Kiểm tra nếu error là instance của Error
                 Alert.alert("Error", error.message || "Không thể cập nhật giỏ hàng.");
             } else {
                 Alert.alert("Error", "Không thể cập nhật giỏ hàng.");
@@ -156,19 +181,27 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     // Hàm để xóa sản phẩm khỏi giỏ hàng
     const removeFromCart = async (productId: number) => {
         try {
-            const accessToken = await SecureStore.getItemAsync("cosmetic_access_token");
+            const accessToken = await SecureStore.getItemAsync(
+                "cosmetic_access_token"
+            );
             if (!accessToken) {
-                Alert.alert("Error", "Bạn cần đăng nhập để xóa sản phẩm khỏi giỏ hàng.");
+                Alert.alert(
+                    "Error",
+                    "Bạn cần đăng nhập để xóa sản phẩm khỏi giỏ hàng."
+                );
                 return;
             }
 
-            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/cart/remove/${productId}`, {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json",
-                },
-            });
+            const response = await fetch(
+                `${process.env.EXPO_PUBLIC_API_URL}/cart/remove/${productId}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
 
             if (!response.ok) {
                 throw new Error("Failed to remove item");
@@ -176,10 +209,15 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
             // Cập nhật giỏ hàng sau khi xóa
             await fetchCart();
-        } catch (error: unknown) { // Đặt kiểu của error là unknown
+        } catch (error: unknown) {
+            // Đặt kiểu của error là unknown
             console.log(error);
-            if (error instanceof Error) { // Kiểm tra nếu error là instance của Error
-                Alert.alert("Error", error.message || "Không thể xóa sản phẩm khỏi giỏ hàng.");
+            if (error instanceof Error) {
+                // Kiểm tra nếu error là instance của Error
+                Alert.alert(
+                    "Error",
+                    error.message || "Không thể xóa sản phẩm khỏi giỏ hàng."
+                );
             } else {
                 Alert.alert("Error", "Không thể xóa sản phẩm khỏi giỏ hàng.");
             }
