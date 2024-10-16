@@ -1,3 +1,4 @@
+// src/screens/CartScreen.tsx
 import React, { useEffect, useContext } from "react";
 import {
   View,
@@ -26,6 +27,21 @@ const CartScreen: React.FC = () => {
     );
   }
 
+  const calculateTotal = () => {
+    return cartItems
+      .reduce(
+        (acc: number, item: CartItem) =>
+          item.product && item.product.price ? acc + item.product.price * item.quantity : acc,
+        0
+      )
+      .toFixed(2);
+  };
+
+  const handleCheckout = () => {
+    // Implement checkout functionality here
+    Alert.alert("Thông báo", "Chức năng thanh toán đang được phát triển.");
+  };
+
   return (
     <View style={styles.container}>
       {cartItems.length === 0 ? (
@@ -44,19 +60,8 @@ const CartScreen: React.FC = () => {
       )}
       {cartItems.length > 0 && (
         <View style={styles.totalContainer}>
-          <Text style={styles.totalText}>
-            Tổng cộng: $
-            {cartItems
-              .reduce(
-                (acc: number, item: CartItem) =>
-                  item.product && item.product.price
-                    ? acc + item.product.price * item.quantity
-                    : acc,
-                0
-              )
-              .toFixed(2)}
-          </Text>
-          <TouchableOpacity style={styles.checkoutButton}>
+          <Text style={styles.totalText}>Tổng cộng: ${calculateTotal()}</Text>
+          <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
             <Text style={styles.checkoutButtonText}>Thanh toán</Text>
           </TouchableOpacity>
         </View>
@@ -69,6 +74,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor: "#f5f5f5",
   },
   emptyCartText: {
     textAlign: "center",
