@@ -41,13 +41,12 @@ export class OrderController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('filter')
+  @Get()
   async filterOrders(
     @Req() req, // Lấy thông tin người dùng từ JWT
-    @Query('status') status: OrderStatus, // Lọc theo status, nếu có
   ) {
     const userId = req.user.id; // Lấy userId từ token JWT
-    return this.orderService.getOrdersByStatusAndUser(userId, status);
+    return this.orderService.getAll(userId);
   }
 
   @UseGuards(AuthGuard)
