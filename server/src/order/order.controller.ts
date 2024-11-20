@@ -39,7 +39,7 @@ export class OrderController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('filter')
+  @Get()
   async filterOrders(
     @Req() req, // Lấy thông tin người dùng từ JWT
   ) {
