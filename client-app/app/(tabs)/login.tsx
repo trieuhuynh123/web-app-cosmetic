@@ -57,7 +57,7 @@ const LoginScreen = () => {
         setEmail("");
         setMessage("");
         setPassword("");
-        router.back();
+        router.push("/profile");
       }
     } catch (error) {
       console.error("Error:", error);

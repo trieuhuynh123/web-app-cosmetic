@@ -48,7 +48,7 @@ const RegisterScreen = () => {
         setMessage(responseData.message);
       } else {
         setMessage("");
-        router.push("/login");
+        router.replace("/login");
       }
     } catch (error) {
       console.error("Error:", error);
