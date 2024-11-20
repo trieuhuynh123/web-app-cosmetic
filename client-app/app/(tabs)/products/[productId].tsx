@@ -178,10 +178,10 @@ const ProductDetail = ({}) => {
         </TouchableOpacity>
       </View>
       <Toast />
-      {/* <View className="mb-20">
+      <View className="mb-20">
         {purchaseStatus && <RatingComponent productId={productIdString} />}
         <OthersReviews productId={productIdString} />
-      </View> */}
+      </View>
     </ScrollView>
   );
 };

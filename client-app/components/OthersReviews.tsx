@@ -65,9 +65,8 @@ const OthersReviews = ({ productId }: OthersReviewsProps) => {
       <Text className="text-lg font-semibold mb-2">
         Đánh giá của người khác:
       </Text>
-      {reviews.length === 0 && !reviews ? (
-        <Text>Không có đánh giá nào.</Text>
-      ) : (
+      {!reviews.length && <Text>Không có đánh giá nào.</Text>}
+      {reviews.length > 0 &&
         reviews.map((review) => (
           <View key={review.id} className="bg-white rounded p-4 mb-2 shadow">
             <Text className="font-bold">
@@ -76,8 +75,7 @@ const OthersReviews = ({ productId }: OthersReviewsProps) => {
             <Text>Số sao: {review.rating}</Text>
             <Text>{review.comment}</Text>
           </View>
-        ))
-      )}
+        ))}
     </View>
   );
 };
