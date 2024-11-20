@@ -53,7 +53,7 @@ export class ProductService {
     // Thực hiện query với các tham số offset và limit
     return this.productModel
       .find(query)
-      .skip(offset || 0) // Bỏ qua số lượng bản ghi tương ứng với offset
+      .skip(offset * limit || 0) // Bỏ qua số lượng bản ghi tương ứng với offset
       .limit(limit || 10) // Giới hạn số lượng bản ghi trả về (mặc định là 10)
       .exec();
   }
