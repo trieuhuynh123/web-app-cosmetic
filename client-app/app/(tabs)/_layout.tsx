@@ -245,7 +245,7 @@ const Layout = () => {
             }}
           />
           <Tabs.Screen
-            name="checkout"
+            name="order"
             options={{
               tabBarStyle: { display: "none" },
               tabBarIcon: () => null,

@@ -149,8 +149,16 @@ const CartScreen: React.FC = () => {
           )}
         />
       )}
-      <TouchableOpacity className="bg-black " onPress={handleCheckout}>
-        <Text>Thanh toán</Text>
+      <TouchableOpacity
+        className="bg-pink-300 py-3 px-5 rounded-lg shadow-md flex items-center justify-center"
+        onPress={handleCheckout}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <Text className="text-white font-semibold text-lg">Thanh toán</Text>
+        )}
       </TouchableOpacity>
       {/* {cartItems.length > 0 && (
         <View>
