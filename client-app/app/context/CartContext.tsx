@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import * as SecureStore from "expo-secure-store";
 import { Alert } from "react-native";
-
+import Toast from "react-native-toast-message";
 // Định nghĩa các interface và xuất khẩu chúng
 export interface Product {
   id: number;
@@ -11,10 +11,10 @@ export interface Product {
 }
 
 export interface CartItem {
+  _id: string;
   product: Product;
   quantity: number;
 }
-
 interface CartContextProps {
   cartItems: CartItem[];
   cartCount: number;
@@ -24,6 +24,7 @@ interface CartContextProps {
   fetchCart: () => Promise<void>;
 }
 
+// Create the context with a default value
 export const CartContext = createContext<CartContextProps>({
   cartItems: [],
   cartCount: 0,
@@ -32,7 +33,6 @@ export const CartContext = createContext<CartContextProps>({
   removeFromCart: async () => {},
   fetchCart: async () => {},
 });
-
 interface CartProviderProps {
   children: ReactNode;
 }
@@ -41,7 +41,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartCount, setCartCount] = useState<number>(0);
 
-  // Hàm để lấy giỏ hàng từ backend
+  // Fetch Cart Function
   const fetchCart = async () => {
     try {
       const accessToken = await SecureStore.getItemAsync(
@@ -74,25 +74,35 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         )
       );
     } catch (error: unknown) {
-      // Đặt kiểu của error là unknown
       console.log(error);
       if (error instanceof Error) {
-        // Kiểm tra nếu error là instance của Error
-        Alert.alert("Error", error.message || "Không thể tải giỏ hàng.");
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Cannot load cart.",
+        });
       } else {
-        Alert.alert("Error", "Không thể tải giỏ hàng.");
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Cannot load cart.",
+        });
       }
     }
   };
 
-  // Hàm để thêm sản phẩm vào giỏ hàng
+  // Add to Cart Function
   const addToCart = async (productId: number, quantity: number) => {
     try {
       const accessToken = await SecureStore.getItemAsync(
         "cosmetic_access_token"
       );
       if (!accessToken) {
-        Alert.alert("Error", "Bạn cần đăng nhập để thêm vào giỏ hàng.");
+        Toast.show({
+          type: "info",
+          text1: "Authentication Required",
+          text2: "Please log in to add items to your cart.",
+        });
         return;
       }
 
@@ -105,8 +115,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            productId: productId,
-            quantity: quantity,
+            productId,
+            quantity,
           }),
         }
       );
@@ -116,31 +126,42 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         throw new Error(errorData.message || "Failed to add to cart");
       }
 
-      // Cập nhật giỏ hàng sau khi thêm
       await fetchCart();
+      Toast.show({
+        type: "success",
+        text1: "Added to Cart",
+        text2: "The item has been added to your cart.",
+      });
     } catch (error: unknown) {
-      // Đặt kiểu của error là unknown
       console.log(error);
       if (error instanceof Error) {
-        // Kiểm tra nếu error là instance của Error
-        Alert.alert(
-          "Error",
-          error.message || "Không thể thêm sản phẩm vào giỏ hàng."
-        );
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Cannot add to cart.",
+        });
       } else {
-        Alert.alert("Error", "Không thể thêm sản phẩm vào giỏ hàng.");
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Cannot add to cart.",
+        });
       }
     }
   };
 
-  // Hàm để cập nhật số lượng sản phẩm trong giỏ hàng
+  // Update Cart Item Function
   const updateCartItem = async (productId: number, quantity: number) => {
     try {
       const accessToken = await SecureStore.getItemAsync(
         "cosmetic_access_token"
       );
       if (!accessToken) {
-        Alert.alert("Error", "Bạn cần đăng nhập để cập nhật giỏ hàng.");
+        Toast.show({
+          type: "info",
+          text1: "Authentication Required",
+          text2: "Please log in to update your cart.",
+        });
         return;
       }
 
@@ -153,8 +174,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            productId: productId,
-            quantity: quantity,
+            productId,
+            quantity,
           }),
         }
       );
@@ -164,31 +185,42 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         throw new Error(errorData.message || "Failed to update cart");
       }
 
-      // Cập nhật giỏ hàng sau khi cập nhật
       await fetchCart();
+      Toast.show({
+        type: "success",
+        text1: "Cart Updated",
+        text2: "Your cart has been updated.",
+      });
     } catch (error: unknown) {
-      // Đặt kiểu của error là unknown
       console.log(error);
       if (error instanceof Error) {
-        // Kiểm tra nếu error là instance của Error
-        Alert.alert("Error", error.message || "Không thể cập nhật giỏ hàng.");
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Cannot update cart.",
+        });
       } else {
-        Alert.alert("Error", "Không thể cập nhật giỏ hàng.");
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Cannot update cart.",
+        });
       }
     }
   };
 
-  // Hàm để xóa sản phẩm khỏi giỏ hàng
+  // Remove from Cart Function
   const removeFromCart = async (productId: number) => {
     try {
       const accessToken = await SecureStore.getItemAsync(
         "cosmetic_access_token"
       );
       if (!accessToken) {
-        Alert.alert(
-          "Error",
-          "Bạn cần đăng nhập để xóa sản phẩm khỏi giỏ hàng."
-        );
+        Toast.show({
+          type: "info",
+          text1: "Authentication Required",
+          text2: "Please log in to modify your cart.",
+        });
         return;
       }
 
@@ -207,19 +239,26 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         throw new Error("Failed to remove item");
       }
 
-      // Cập nhật giỏ hàng sau khi xóa
       await fetchCart();
+      Toast.show({
+        type: "success",
+        text1: "Removed from Cart",
+        text2: "The item has been removed from your cart.",
+      });
     } catch (error: unknown) {
-      // Đặt kiểu của error là unknown
       console.log(error);
       if (error instanceof Error) {
-        // Kiểm tra nếu error là instance của Error
-        Alert.alert(
-          "Error",
-          error.message || "Không thể xóa sản phẩm khỏi giỏ hàng."
-        );
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Cannot remove from cart.",
+        });
       } else {
-        Alert.alert("Error", "Không thể xóa sản phẩm khỏi giỏ hàng.");
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Cannot remove from cart.",
+        });
       }
     }
   };

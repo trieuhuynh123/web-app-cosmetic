@@ -10,10 +10,8 @@ import {
 import { OrderService } from './order.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { OrderStatus } from './entities/order.entity';
-interface LineItem {
-  productId: string; // ID của sản phẩm
-  quantity: number; // Số lượng của sản phẩm
-}
+import { CartItem } from 'src/cart/schemas/cart-item.schema';
+
 
 @Controller('orders')
 export class OrderController {
@@ -21,9 +19,9 @@ export class OrderController {
 
   @UseGuards(AuthGuard)
   @Post()
-  async createOrder(@Req() req, @Body() lineitems: LineItem[]) {
+  async createOrder(@Req() req, @Body() cartItems: CartItem[]) {
     const userId = req.user.id;
-    return this.orderService.create(userId, lineitems);
+    return this.orderService.create(userId, cartItems);
   }
 
   @UseGuards(AuthGuard)

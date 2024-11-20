@@ -1,8 +1,9 @@
 import { Prop } from '@nestjs/mongoose';
+import { Product } from 'src/product/entities/product.entity';
 
 export class OrderDetail {
   @Prop({ type: String, ref: 'Product' })
-  product: string;
+  product: Product;
 
   @Prop({ required: true })
   price: number;

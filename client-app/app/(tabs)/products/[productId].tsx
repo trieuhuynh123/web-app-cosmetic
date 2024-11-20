@@ -1,6 +1,6 @@
 // ProductDetail.js
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import {
 import * as SecureStore from "expo-secure-store";
 import RatingComponent from "@/components/RatingComponent";
 import OthersReviews from "@/components/OthersReviews";
+import { CartContext } from "@/app/context/CartContext";
+import Toast from "react-native-toast-message";
 interface Product {
   id: number;
   name: string;
@@ -33,6 +35,7 @@ const ProductDetail = ({}) => {
   const [quantity, setQuantity] = useState(1);
   const [purchaseStatus, setPurchaseStatus] = useState<boolean>();
   const [reviews, setReviews] = useState<Review[]>([]);
+  const { addToCart } = useContext(CartContext);
 
   useEffect(() => {
     const fetchOthersReviews = async () => {
@@ -112,6 +115,17 @@ const ProductDetail = ({}) => {
       setQuantity(quantity - 1);
     }
   };
+  const handleAddToCart = () => {
+    if (product) {
+      addToCart(product.id, quantity);
+    } else {
+      Toast.show({
+        type: "error",
+        text1: "Product Error",
+        text2: "Product details are not available.",
+      });
+    }
+  };
 
   if (loading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
@@ -156,19 +170,18 @@ const ProductDetail = ({}) => {
         </View>
         <TouchableOpacity
           className="bg-blue-500 p-4 rounded mt-4"
-          onPress={() => {
-            router.back();
-          }}
+          onPress={handleAddToCart}
         >
           <Text className="text-white text-center text-lg font-bold">
             Thêm vào giỏ hàng
           </Text>
         </TouchableOpacity>
       </View>
-      <View className="mb-20">
+      <Toast />
+      {/* <View className="mb-20">
         {purchaseStatus && <RatingComponent productId={productIdString} />}
         <OthersReviews productId={productIdString} />
-      </View>
+      </View> */}
     </ScrollView>
   );
 };

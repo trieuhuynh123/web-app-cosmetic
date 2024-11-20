@@ -10,7 +10,7 @@ export type CartItemDocument = CartItem & Document;
 @Schema()
 export class CartItem {
     @Prop({ type: Types.ObjectId, ref: 'Product', required: true })
-    product: Product | string; // Tham chiếu đến sản phẩm
+    product: Product ; // Tham chiếu đến sản phẩm
 
     @Prop({ required: true, default: 1 })
     quantity: number;

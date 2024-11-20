@@ -7,10 +7,8 @@ import { Model } from 'mongoose';
 import { Order, OrderStatus } from './entities/order.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Product, ProductDocument } from 'src/product/entities/product.entity';
-interface LineItem {
-  productId: string; // ID của sản phẩm
-  quantity: number; // Số lượng của sản phẩm
-}
+import { CartItem } from 'src/cart/schemas/cart-item.schema';
+
 @Injectable()
 export class OrderService {
   constructor(
@@ -33,15 +31,16 @@ export class OrderService {
     return !!order;
   }
 
-  async create(userId: string, lineItems: LineItem[]): Promise<Order> {
+  async create(userId: string, cartItems: CartItem[]): Promise<Order> {
     let totalAmount = 0;
     const orderDetails = [];
 
-    for (const item of lineItems) {
-      const product = await this.productModel.findById(item.productId).exec();
+    for (const item of cartItems) {
+      
+      const product = await this.productModel.findById((item.product as ProductDocument).id).exec();
       if (!product) {
         throw new NotFoundException(
-          `Product with ID ${item.productId} not found`,
+          `Product not found`,
         );
       }
 

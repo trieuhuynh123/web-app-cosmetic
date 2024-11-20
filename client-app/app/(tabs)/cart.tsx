@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from "react";
+import React, { useEffect, useContext, useState } from "react";
 import {
   View,
   Text,
@@ -8,103 +8,158 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
+import * as SecureStore from "expo-secure-store";
 import { CartContext, CartItem } from "../context/CartContext";
 import CartItemComponent from "@/components/CartItem";
+import Toast from "react-native-toast-message";
+import { useRouter } from "expo-router";
 
 const CartScreen: React.FC = () => {
   const { cartItems, cartCount, fetchCart } = useContext(CartContext);
-
+  const router = useRouter();
+  const [selectedItems, setSelectedItems] = useState<CartItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState<boolean>(false);
   useEffect(() => {
     fetchCart();
   }, []);
 
+  const handleCheckout = async () => {
+    if (selectedItems.length === 0) {
+      Toast.show({
+        type: "info",
+        text1: "No Items Selected",
+        text2: "Please select items to checkout.",
+      });
+      return;
+    }
+
+    Alert.alert("Confirm Checkout", `\nDo you want to proceed?`, [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "OK",
+        onPress: () => createOrder(),
+      },
+    ]);
+  };
+
+  const createOrder = async () => {
+    setLoading(true);
+    try {
+      const accessToken = await SecureStore.getItemAsync(
+        "cosmetic_access_token"
+      );
+      if (!accessToken) {
+        Toast.show({
+          type: "info",
+          text1: "Authentication Required",
+          text2: "Please log in to proceed with checkout.",
+        });
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/orders`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(selectedItems),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to place order");
+      }
+
+      const data = await response.json();
+      Toast.show({
+        type: "success",
+        text1: "Order Placed",
+        text2: "Your order has been placed successfully.",
+      });
+
+      // Clear selected items and refresh cart
+      // setSelectedItems([]);
+      fetchCart();
+    } catch (error: unknown) {
+      console.error(error);
+      if (error instanceof Error) {
+        Toast.show({
+          type: "error",
+          text1: "Checkout Error",
+          text2: error.message || "An error occurred during checkout.",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Checkout Error",
+          text2: "An unexpected error occurred.",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectItem = (item: CartItem) => {
+    setSelectedItems((prevSelected) => {
+      // Check if the item is already selected
+      const isAlreadySelected = prevSelected.some(
+        (selectedItem) => selectedItem._id === item._id
+      );
+
+      const itemTotalPrice = item.product.price * item.quantity;
+
+      if (isAlreadySelected) {
+        return prevSelected.filter(
+          (selectedItem) => selectedItem._id !== item._id
+        );
+      } else {
+        return [...prevSelected, item];
+      }
+    });
+  };
+
   if (cartCount === null) {
     return (
-      <View style={styles.loader}>
+      <View>
         <ActivityIndicator size="large" color="#0F8BBD0" />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View className="pb-[200px]">
       {cartItems.length === 0 ? (
-        <Text style={styles.emptyCartText}>Giỏ hàng của bạn đang trống.</Text>
+        <Text>Giỏ hàng của bạn đang trống.</Text>
       ) : (
         <FlatList
           data={cartItems}
-          keyExtractor={(item: CartItem) => item.product.id.toString()}
-          renderItem={({ item }: { item: CartItem }) => (
-            <CartItemComponent item={item} />
+          keyExtractor={(item) => item._id.toString()}
+          renderItem={({ item }) => (
+            <CartItemComponent item={item} onSelect={handleSelectItem} />
           )}
-          contentContainerStyle={{ paddingBottom: 100 }}
         />
       )}
-      {cartItems.length > 0 && (
-        <View style={styles.totalContainer}>
-          <Text style={styles.totalText}>
-            Tổng cộng: $
-            {cartItems
-              .reduce(
-                (acc: number, item: CartItem) =>
-                  acc + item.product.price * item.quantity,
-                0
-              )
-              .toFixed(2)}
-          </Text>
-          <TouchableOpacity style={styles.checkoutButton}>
-            <Text style={styles.checkoutButtonText}>Thanh toán</Text>
-          </TouchableOpacity>
+      <TouchableOpacity className="bg-black " onPress={handleCheckout}>
+        <Text>Thanh toán</Text>
+      </TouchableOpacity>
+      {/* {cartItems.length > 0 && (
+        <View>
+          <Text>Tổng cộng: ${total}</Text>
         </View>
-      )}
+      )} */}
+      <Toast />
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  emptyCartText: {
-    textAlign: "center",
-    marginTop: 50,
-    fontSize: 18,
-    color: "#888",
-  },
-  loader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  totalContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-    borderTopWidth: 1,
-    borderColor: "#ddd",
-    backgroundColor: "#fff",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  totalText: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  checkoutButton: {
-    backgroundColor: "#0F8BBD0",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-  },
-  checkoutButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-});
 
 export default CartScreen;

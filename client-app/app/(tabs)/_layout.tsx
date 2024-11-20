@@ -3,6 +3,9 @@ import { Tabs } from "expo-router";
 import { View, Text } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
+import Toast from "react-native-toast-message";
+import { CartProvider } from "../context/CartContext";
+import Checkout from "./checkout";
 const Layout = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -66,181 +69,191 @@ const Layout = () => {
 
   return (
     <>
-      <Tabs
-        backBehavior="history"
-        screenOptions={{
-          headerShown: false,
-          tabBarShowLabel: false,
-          tabBarStyle: {
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 72,
-            elevation: 0,
-            backgroundColor: "white",
-            borderRadius: 16,
-            alignItems: "center",
-            justifyContent: "center",
-          },
-        }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View
-                style={{
-                  alignItems: "center",
-                  paddingTop: 10,
-                }}
-              >
-                <Ionicons
-                  name={focused ? "home" : "home-outline"}
-                  color={focused ? "#0F8BBD0" : "pink"}
-                  size={24}
-                />
-                <Text
+      <CartProvider>
+        <Tabs
+          backBehavior="history"
+          screenOptions={{
+            headerShown: false,
+            tabBarShowLabel: false,
+            tabBarStyle: {
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 72,
+              elevation: 0,
+              backgroundColor: "white",
+              borderRadius: 16,
+              alignItems: "center",
+              justifyContent: "center",
+            },
+          }}
+        >
+          <Tabs.Screen
+            name="index"
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <View
                   style={{
-                    color: focused ? "#0F8BBD0" : "pink",
-                    fontSize: 12,
-                    marginTop: 4,
+                    alignItems: "center",
+                    paddingTop: 10,
                   }}
                 >
-                  Home
-                </Text>
-              </View>
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="search"
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View
-                style={{
-                  alignItems: "center",
-                  paddingTop: 10,
-                }}
-              >
-                <Ionicons
-                  name={focused ? "search" : "search-outline"}
-                  color={focused ? "#0F8BBD0" : "pink"}
-                  size={24}
-                />
-                <Text
+                  <Ionicons
+                    name={focused ? "home" : "home-outline"}
+                    color={focused ? "#0F8BBD0" : "pink"}
+                    size={24}
+                  />
+                  <Text
+                    style={{
+                      color: focused ? "#0F8BBD0" : "pink",
+                      fontSize: 12,
+                      marginTop: 4,
+                    }}
+                  >
+                    Home
+                  </Text>
+                </View>
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="search"
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <View
                   style={{
-                    color: focused ? "#0F8BBD0" : "pink",
-                    fontSize: 12,
-                    marginTop: 4,
+                    alignItems: "center",
+                    paddingTop: 10,
                   }}
                 >
-                  Search
-                </Text>
-              </View>
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="cart"
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View
-                style={{
-                  alignItems: "center",
-                  paddingTop: 10,
-                }}
-              >
-                <Ionicons
-                  name={focused ? "cart" : "cart-outline"}
-                  color={focused ? "#0F8BBD0" : "pink"}
-                  size={24}
-                />
-                <Text
+                  <Ionicons
+                    name={focused ? "search" : "search-outline"}
+                    color={focused ? "#0F8BBD0" : "pink"}
+                    size={24}
+                  />
+                  <Text
+                    style={{
+                      color: focused ? "#0F8BBD0" : "pink",
+                      fontSize: 12,
+                      marginTop: 4,
+                    }}
+                  >
+                    Search
+                  </Text>
+                </View>
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="cart"
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <View
                   style={{
-                    color: focused ? "#0F8BBD0" : "pink",
-                    fontSize: 12,
-                    marginTop: 4,
+                    alignItems: "center",
+                    paddingTop: 10,
                   }}
                 >
-                  Cart
-                </Text>
-              </View>
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View
-                style={{
-                  alignItems: "center",
-                  paddingTop: 10,
-                }}
-              >
-                <Ionicons
-                  name={focused ? "person" : "person-outline"}
-                  color={focused ? "#0F8BBD0" : "pink"}
-                  size={24}
-                />
-                <Text
+                  <Ionicons
+                    name={focused ? "cart" : "cart-outline"}
+                    color={focused ? "#0F8BBD0" : "pink"}
+                    size={24}
+                  />
+                  <Text
+                    style={{
+                      color: focused ? "#0F8BBD0" : "pink",
+                      fontSize: 12,
+                      marginTop: 4,
+                    }}
+                  >
+                    Cart
+                  </Text>
+                </View>
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="profile"
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <View
                   style={{
-                    color: focused ? "#0F8BBD0" : "pink",
-                    fontSize: 12,
-                    marginTop: 4,
+                    alignItems: "center",
+                    paddingTop: 10,
                   }}
                 >
-                  Profile
-                </Text>
-              </View>
-            ),
-            href: isLoggedIn ? undefined : null,
-          }}
-        />
-        <Tabs.Screen
-          name="login"
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <View
-                style={{
-                  alignItems: "center",
-                  paddingTop: 10,
-                }}
-              >
-                <Ionicons
-                  name={focused ? "log-in" : "log-in-outline"}
-                  color={focused ? "#0F8BBD0" : "pink"}
-                  size={24}
-                />
-                <Text
+                  <Ionicons
+                    name={focused ? "person" : "person-outline"}
+                    color={focused ? "#0F8BBD0" : "pink"}
+                    size={24}
+                  />
+                  <Text
+                    style={{
+                      color: focused ? "#0F8BBD0" : "pink",
+                      fontSize: 12,
+                      marginTop: 4,
+                    }}
+                  >
+                    Profile
+                  </Text>
+                </View>
+              ),
+              href: isLoggedIn ? undefined : null,
+            }}
+          />
+          <Tabs.Screen
+            name="login"
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <View
                   style={{
-                    color: focused ? "#0F8BBD0" : "pink",
-                    fontSize: 12,
-                    marginTop: 4,
+                    alignItems: "center",
+                    paddingTop: 10,
                   }}
                 >
-                  Login
-                </Text>
-              </View>
-            ),
-            href: !isLoggedIn ? undefined : null,
-          }}
-        />
+                  <Ionicons
+                    name={focused ? "log-in" : "log-in-outline"}
+                    color={focused ? "#0F8BBD0" : "pink"}
+                    size={24}
+                  />
+                  <Text
+                    style={{
+                      color: focused ? "#0F8BBD0" : "pink",
+                      fontSize: 12,
+                      marginTop: 4,
+                    }}
+                  >
+                    Login
+                  </Text>
+                </View>
+              ),
+              href: !isLoggedIn ? undefined : null,
+            }}
+          />
 
-        <Tabs.Screen
-          name="register"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="products/[productId]"
-          options={{
-            href: null,
-          }}
-        />
-      </Tabs>
+          <Tabs.Screen
+            name="register"
+            options={{
+              href: null,
+            }}
+          />
+          <Tabs.Screen
+            name="products/[productId]"
+            options={{
+              href: null,
+            }}
+          />
+          <Tabs.Screen
+            name="checkout"
+            options={{
+              tabBarStyle: { display: "none" },
+              tabBarIcon: () => null,
+            }}
+          />
+        </Tabs>
+        <Toast />
+      </CartProvider>
     </>
   );
 };

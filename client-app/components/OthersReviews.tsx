@@ -32,16 +32,22 @@ const OthersReviews = ({ productId }: OthersReviewsProps) => {
           },
         }
       );
-
       const data = await response.json();
-      setReviews(data); // Giả sử dữ liệu trả về là mảng đánh giá
+
+      // Check if data is an array
+      if (Array.isArray(data)) {
+        setReviews(data);
+      } else {
+        console.error("Unexpected API response format:", data);
+        setReviews([]); // Set empty array if data is not in the expected format
+      }
     } catch (error) {
-      console.error("Lỗi khi gọi API:", error);
+      console.error("Error fetching reviews:", error);
+      Alert.alert("Error", "Unable to fetch reviews. Please try again later.");
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchOthersReviews();
   }, [productId]);
@@ -59,7 +65,7 @@ const OthersReviews = ({ productId }: OthersReviewsProps) => {
       <Text className="text-lg font-semibold mb-2">
         Đánh giá của người khác:
       </Text>
-      {reviews.length === 0 ? (
+      {reviews.length === 0 && !reviews ? (
         <Text>Không có đánh giá nào.</Text>
       ) : (
         reviews.map((review) => (

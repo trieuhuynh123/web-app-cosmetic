@@ -16,7 +16,7 @@ import { ReviewModule } from './review/review.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    MongooseModule.forRoot(process.env.DATABASE_URL),
+    MongooseModule.forRoot("mongodb://localhost/cosmetic"),
     BrandModule,
     CategoryModule,
     ProductModule,
