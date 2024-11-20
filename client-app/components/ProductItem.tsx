@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import React from "react";
 import { TouchableOpacity, Image, Text, StyleSheet } from "react-native";
 
 interface Product {

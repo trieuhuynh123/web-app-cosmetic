@@ -55,7 +55,6 @@ const ProductDetail = ({}) => {
         const data = await response.json();
         setReviews(data); // Giả sử dữ liệu trả về là mảng đánh giá
       } catch (error) {
-        console.error("Lỗi khi gọi API:", error);
       } finally {
       }
     };
@@ -70,41 +69,41 @@ const ProductDetail = ({}) => {
         const data = await response.json();
         setProduct(data);
       } catch (error) {
-        console.error(error);
       } finally {
         setLoading(false);
       }
     };
-    const checkPurchasedProduct = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/orders/check-purchase`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${await SecureStore.getItemAsync(
-                "cosmetic_access_token"
-              )}`,
-            },
-            body: JSON.stringify({ productId }), // Gửi productId trong body
-          }
-        );
-        const data = await response.json();
 
-        if (data.purchased === true) {
-          setPurchaseStatus(true);
-        } else {
-          setPurchaseStatus(false);
-        }
-      } catch (error) {
-        setPurchaseStatus(false);
-      }
-    };
     fetchProduct();
-    checkPurchasedProduct();
     fetchOthersReviews();
   }, [productId]);
+  const checkPurchasedProduct = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/orders/check-purchase`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${await SecureStore.getItemAsync(
+              "cosmetic_access_token"
+            )}`,
+          },
+          body: JSON.stringify({ productId }), // Gửi productId trong body
+        }
+      );
+      const data = await response.json();
+
+      if (data.purchased === true) {
+        setPurchaseStatus(true);
+      } else {
+        setPurchaseStatus(false);
+      }
+    } catch (error) {
+      setPurchaseStatus(false);
+    }
+  };
+  checkPurchasedProduct();
 
   const handleIncrease = () => {
     setQuantity(quantity + 1);

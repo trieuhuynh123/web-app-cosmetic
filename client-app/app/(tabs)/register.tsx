@@ -51,7 +51,6 @@ const RegisterScreen = () => {
         router.replace("/login");
       }
     } catch (error) {
-      console.error("Error:", error);
     }
   };
 

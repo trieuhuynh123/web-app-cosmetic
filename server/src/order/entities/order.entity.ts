@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
-import { OrderDetail } from './order-detail.entity';
+import { OrderDetail, OrderDetailEntity } from './order-detail.entity';
 export enum OrderStatus {
   NEW = 'new', // Đơn hàng mới
   CONFIRMED = 'confirmed', // Đã xác nhận
@@ -32,7 +32,7 @@ export class Order {
   @Prop({ required: true })
   totalAmount: number;
 
-  @Prop({ type: OrderDetail, ref: 'OrderDetail' })
+  @Prop({ type: [OrderDetailEntity] })
   orderDetails: string[];
 
   @Prop({ enum: OrderStatus, default: OrderStatus.NEW })

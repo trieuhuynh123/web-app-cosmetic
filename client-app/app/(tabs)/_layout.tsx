@@ -5,7 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
 import { CartProvider } from "../context/CartContext";
-import Checkout from "./checkout";
+import React from "react";
 const Layout = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -247,8 +247,29 @@ const Layout = () => {
           <Tabs.Screen
             name="order"
             options={{
-              tabBarStyle: { display: "none" },
-              tabBarIcon: () => null,
+              tabBarIcon: ({ focused }) => (
+                <View
+                  style={{
+                    alignItems: "center",
+                    paddingTop: 10,
+                  }}
+                >
+                  <Ionicons
+                    name={focused ? "search" : "search-outline"}
+                    color={focused ? "#0F8BBD0" : "pink"}
+                    size={24}
+                  />
+                  <Text
+                    style={{
+                      color: focused ? "#0F8BBD0" : "pink",
+                      fontSize: 12,
+                      marginTop: 4,
+                    }}
+                  >
+                    Search
+                  </Text>
+                </View>
+              ),
             }}
           />
         </Tabs>

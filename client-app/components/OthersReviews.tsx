@@ -38,11 +38,9 @@ const OthersReviews = ({ productId }: OthersReviewsProps) => {
       if (Array.isArray(data)) {
         setReviews(data);
       } else {
-        console.error("Unexpected API response format:", data);
         setReviews([]); // Set empty array if data is not in the expected format
       }
     } catch (error) {
-      console.error("Error fetching reviews:", error);
       Alert.alert("Error", "Unable to fetch reviews. Please try again later.");
     } finally {
       setLoading(false);

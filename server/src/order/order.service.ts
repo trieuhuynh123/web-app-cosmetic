@@ -8,10 +8,7 @@ import { Order, OrderStatus } from './entities/order.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Product, ProductDocument } from 'src/product/entities/product.entity';
 import { CartItem } from 'src/cart/schemas/cart-item.schema';
-interface LineItem {
-  productId: string; // ID của sản phẩm
-  quantity: number; // Số lượng của sản phẩm
-}
+
 @Injectable()
 export class OrderService {
   constructor(
@@ -39,12 +36,11 @@ export class OrderService {
     const orderDetails = [];
 
     for (const item of cartItems) {
-      
-      const product = await this.productModel.findById((item.product as ProductDocument).id).exec();
+      const product = await this.productModel
+        .findById((item.product as ProductDocument).id)
+        .exec();
       if (!product) {
-        throw new NotFoundException(
-          `Product not found`,
-        );
+        throw new NotFoundException(`Product not found`);
       }
 
       const totalPriceForItem = product.price * item.quantity; // Tính tổng tiền cho từng mục
@@ -72,7 +68,12 @@ export class OrderService {
     const filter: any = { user: userId };
 
     // Fetch all orders
-    const orders = await this.orderModel.find(filter).exec();
+    const orders = await this.orderModel
+      .find(filter)
+      .populate({
+        path: 'orderDetails.product', // Tên trường cần populate
+      })
+      .exec();
 
     // Group orders by status and calculate total amount
     const groupedOrders = orders.reduce(

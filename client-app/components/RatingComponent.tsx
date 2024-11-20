@@ -92,7 +92,6 @@ const RatingComponent = ({ productId }: RatingComponentProps) => {
         setHasReview(false); // Nếu xảy ra lỗi, giả định không có review
       }
     } catch (error) {
-      console.error("Lỗi khi kiểm tra review:", error);
       setHasReview(false);
     }
   };

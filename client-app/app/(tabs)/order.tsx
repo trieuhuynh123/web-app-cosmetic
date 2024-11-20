@@ -3,28 +3,40 @@ import {
   View,
   Text,
   FlatList,
+  Image,
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { router, useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import * as SecureStore from "expo-secure-store";
 
 interface Order {
   _id: string;
   status: string;
-  items: Array<{
-    product: { name: string; price: number };
+  orderDetails: {
+    price: number;
     quantity: number;
-  }>;
-  total: number;
-  createdAt: string;
+    product: {
+      id: string;
+      name: string;
+      image: string;
+    };
+  }[];
+  totalAmount: number;
+  createDate: string;
+}
+
+interface GroupOrder {
+  [key: string]: {
+    orders: Order[];
+    totalAmount: number;
+  };
 }
 
 const OrderScreen: React.FC = () => {
-  const [groupOrders, setGroupOrders] = useState();
-  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
-  const [activeTab, setActiveTab] = useState<"New" | "Delivered">("New");
+  const [groupOrders, setGroupOrders] = useState<GroupOrder>();
+  const [activeTab, setActiveTab] = useState<string>();
   const [loading, setLoading] = useState(false);
 
   const fetchOrders = async () => {
@@ -46,8 +58,9 @@ const OrderScreen: React.FC = () => {
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/orders`,
         {
+          method: "GET",
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken}`, // Thêm header Authorization với token
           },
         }
       );
@@ -57,11 +70,10 @@ const OrderScreen: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log(data);
+
       setGroupOrders(data);
       // Filter orders based on the active tab
     } catch (error) {
-      console.error(error);
       Toast.show({
         type: "error",
         text1: "Error",
@@ -76,53 +88,70 @@ const OrderScreen: React.FC = () => {
     fetchOrders();
   }, []);
 
+  if (!groupOrders) {
+    return (
+      <View>
+        <Text>Không có đơn nào</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {/* Tab Buttons */}
       <View style={styles.tabContainer}>
-        {Object.entries().map(([key, { orders, totalAmount }]) => (
+        {Object.keys(groupOrders).map((key) => (
           <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === "Delivered" && styles.activeTab,
-            ]}
-            onPress={() => setActiveTab("Delivered")}
+            key={key}
+            style={[styles.tabButton, activeTab === key && styles.activeTab]}
+            onPress={() => setActiveTab(key)}
           >
-            <Text style={styles.tabText}>Delivered</Text>
+            <Text style={styles.tabText}>{key.toUpperCase()}</Text>
           </TouchableOpacity>
         ))}
       </View>
-
-      {/* Order List */}
-      {loading ? (
-        <Text>Loading...</Text>
-      ) : filteredOrders.length === 0 ? (
-        <Text style={styles.emptyText}>
-          No {activeTab.toLowerCase()} orders found.
-        </Text>
-      ) : (
-        <FlatList
-          data={filteredOrders}
-          keyExtractor={(order) => order._id}
-          renderItem={({ item }) => (
-            <View style={styles.orderItem}>
-              <Text style={styles.orderDate}>
-                {new Date(item.createdAt).toLocaleDateString()}
-              </Text>
-              {item.items.map((orderItem, index) => (
-                <Text key={index} style={styles.orderDetails}>
-                  {orderItem.quantity} x {orderItem.product.name} - $
-                  {(orderItem.product.price * orderItem.quantity).toFixed(2)}
-                </Text>
-              ))}
-              <Text style={styles.orderTotal}>
-                Total: ${item.total.toFixed(2)}
-              </Text>
-            </View>
-          )}
-        />
+      {Object.entries(groupOrders).map(([key, { orders, totalAmount }]) =>
+        key === activeTab ? ( // Chỉ hiển thị nội dung của tab đang active
+          <View key={key}>
+            <Text>Tổng tiền: {totalAmount}</Text>
+            <FlatList
+              data={orders}
+              keyExtractor={(item) => item._id}
+              renderItem={({ item }) => (
+                <View className="my-5 border">
+                  <Text>
+                    Thời gian: {new Date(item.createDate).toLocaleString()}
+                  </Text>
+                  {item.orderDetails.map((orderItem, index) => (
+                    <View
+                      key={index}
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <View>
+                        <TouchableOpacity
+                          onPress={() => {
+                            router.push(`/products/${orderItem.product.id}`);
+                          }}
+                        >
+                          <Image
+                            source={{
+                              uri: orderItem.product.image,
+                            }}
+                            style={{ width: 130, height: 130, marginRight: 10 }} // Added margin to space image from text
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      <Text>
+                        {orderItem.product.name} x{orderItem.quantity}
+                      </Text>
+                    </View>
+                  ))}
+                  <Text>Tổng tiền: {item.totalAmount}</Text>
+                </View>
+              )}
+            />
+          </View>
+        ) : null
       )}
-      <Toast />
     </View>
   );
 };

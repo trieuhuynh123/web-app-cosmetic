@@ -60,7 +60,6 @@ const LoginScreen = () => {
         router.push("/profile");
       }
     } catch (error) {
-      console.error("Error:", error);
     }
   };
 

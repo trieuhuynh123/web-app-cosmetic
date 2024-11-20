@@ -90,7 +90,6 @@ const CartScreen: React.FC = () => {
       // setSelectedItems([]);
       fetchCart();
     } catch (error: unknown) {
-      console.error(error);
       if (error instanceof Error) {
         Toast.show({
           type: "error",

@@ -12,7 +12,6 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { OrderStatus } from './entities/order.entity';
 import { CartItem } from 'src/cart/schemas/cart-item.schema';
 
-
 @Controller('orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
