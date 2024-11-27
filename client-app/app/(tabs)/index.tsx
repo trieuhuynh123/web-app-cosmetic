@@ -7,7 +7,7 @@ import {
   View,
   Image,
 } from "react-native";
-
+import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import { ProductItem } from "@/components/ProductItem";
 interface Category {
@@ -21,10 +21,30 @@ interface Product {
   image: string;
   price: number;
 }
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 export default function App() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [inputSearch, setInputSearch] = useState("");
+
+  useEffect(() => {
+    // Yêu cầu quyền thông báo khi mở ứng dụng lần đầu
+    const requestPermissions = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") {
+        alert("Permission for notifications was denied");
+      }
+    };
+
+    requestPermissions();
+  }, []);
 
   useEffect(() => {
     const fetchCategories = async () => {

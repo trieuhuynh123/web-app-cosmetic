@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import * as Notifications from "expo-notifications";
 import { router, useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import * as SecureStore from "expo-secure-store";
@@ -48,14 +49,27 @@ const OrderScreen: React.FC = () => {
     socket.on("connect", () => {
       console.log("Connected to WebSocket");
     });
-    socket.on("orderUpdated", (data) => {
-      console.log("Received order update:", data);
+    socket.on("orderUpdated", (data: Order) => {
+      console.log("Received order update:", data.createDate);
       fetchOrders();
+      if (data.status === "shipping") {
+        sendNotification(data.createDate);
+      }
     });
     return () => {
       socket.disconnect();
     };
   }, [socket]);
+
+  const sendNotification = async (date: string) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Thông báo đơn hàng",
+        body: `Đơn hàng ${new Date(date).toLocaleString()} đang được giao`,
+      },
+      trigger: null, // Trigger ngay lập tức
+    });
+  };
 
   const fetchOrders = async () => {
     setLoading(true);
