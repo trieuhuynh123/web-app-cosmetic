@@ -255,7 +255,7 @@ const Layout = () => {
                   }}
                 >
                   <Ionicons
-                    name={focused ? "search" : "search-outline"}
+                    name={focused ? "bag" : "bag-outline"}
                     color={focused ? "#0F8BBD0" : "pink"}
                     size={24}
                   />
@@ -266,7 +266,7 @@ const Layout = () => {
                       marginTop: 4,
                     }}
                   >
-                    Search
+                    Đơn hàng
                   </Text>
                 </View>
               ),

@@ -8,10 +8,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 8080;
 
-  app.enableCors({
-    origin: 'http://localhost:3000', // Thay đổi URL này theo frontend của bạn
-    credentials: true,
-  });
+  app.enableCors();
 
   await app.listen(port);
 }

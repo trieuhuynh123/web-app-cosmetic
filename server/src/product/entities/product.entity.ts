@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 
 export type ProductDocument = HydratedDocument<Product>;
 
@@ -21,11 +21,11 @@ export class Product {
   price: number;
 
   // Sửa lại kiểu dữ liệu của category và loại bỏ ref
-  @Prop({ required: true })
+  @Prop({ required: true, ref: 'Category' })
   category: string;
 
   // Sửa lại kiểu dữ liệu của brand và loại bỏ ref
-  @Prop({ required: true })
+  @Prop({ required: true, ref: 'Brand' })
   brand: string;
 
   @Prop({ default: 0 })

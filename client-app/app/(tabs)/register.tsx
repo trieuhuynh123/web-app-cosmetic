@@ -50,8 +50,7 @@ const RegisterScreen = () => {
         setMessage("");
         router.replace("/login");
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   return (
@@ -82,7 +81,6 @@ const RegisterScreen = () => {
         placeholder="Address"
         value={address}
         onChangeText={setAddress}
-        secureTextEntry
       />
       {message ? <Text style={styles.message}>{message}</Text> : null}
       {/* Hiển thị thông báo */}

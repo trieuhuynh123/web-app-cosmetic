@@ -47,6 +47,24 @@ export class AuthService {
     };
   }
 
+  async signInAdmin(email: string, pass: string) {
+    const user = await this.userService.findByEmail(email);
+    // Kiểm tra nếu user không tồn tại
+    if (!user) {
+      throw new UnauthorizedException('Email không đúng');
+    }
+
+    // Kiểm tra nếu mật khẩu không đúng
+    if (user.password !== pass) {
+      throw new UnauthorizedException('Sai mật khẩu');
+    }
+
+    if (!user.isAdmin) {
+      throw new UnauthorizedException('Bạn không phải admin');
+    }
+    return true;
+  }
+
   async getOrCreateRefreshToken(user: UserDocument): Promise<string> {
     const refreshToken = user.refresh_token;
 

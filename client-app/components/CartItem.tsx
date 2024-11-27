@@ -70,14 +70,14 @@ const CartItemComponent: React.FC<CartItemProps> = ({ item, onSelect }) => {
             style={styles.quantityButton}
             onPress={handleDecrease}
           >
-            <Text style={styles.quantityButtonText}>-</Text>
+            <Text className="text-black">-</Text>
           </TouchableOpacity>
           <Text style={styles.quantityText}>{item.quantity}</Text>
           <TouchableOpacity
             style={styles.quantityButton}
             onPress={handleIncrease}
           >
-            <Text style={styles.quantityButtonText}>+</Text>
+            <Text className="text-black">+</Text>
           </TouchableOpacity>
         </View>
       </View>

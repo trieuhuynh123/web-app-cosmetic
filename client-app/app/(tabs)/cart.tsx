@@ -3,23 +3,22 @@ import {
   View,
   Text,
   FlatList,
-  StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
   Alert,
+  TextInput,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { CartContext, CartItem } from "../context/CartContext";
 import CartItemComponent from "@/components/CartItem";
 import Toast from "react-native-toast-message";
-import { useRouter } from "expo-router";
 
 const CartScreen: React.FC = () => {
   const { cartItems, cartCount, fetchCart } = useContext(CartContext);
-  const router = useRouter();
   const [selectedItems, setSelectedItems] = useState<CartItem[]>([]);
-  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState<boolean>(false);
+  const [address, setAddress] = useState<string>("");
+
   useEffect(() => {
     fetchCart();
   }, []);
@@ -30,6 +29,15 @@ const CartScreen: React.FC = () => {
         type: "info",
         text1: "No Items Selected",
         text2: "Please select items to checkout.",
+      });
+      return;
+    }
+
+    if (!address.trim()) {
+      Toast.show({
+        type: "info",
+        text1: "Address Required",
+        text2: "Please enter your delivery address.",
       });
       return;
     }
@@ -70,7 +78,7 @@ const CartScreen: React.FC = () => {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(selectedItems),
+          body: JSON.stringify({ cartItems: selectedItems, address }),
         }
       );
 
@@ -86,8 +94,6 @@ const CartScreen: React.FC = () => {
         text2: "Your order has been placed successfully.",
       });
 
-      // Clear selected items and refresh cart
-      // setSelectedItems([]);
       fetchCart();
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -110,12 +116,9 @@ const CartScreen: React.FC = () => {
 
   const handleSelectItem = (item: CartItem) => {
     setSelectedItems((prevSelected) => {
-      // Check if the item is already selected
       const isAlreadySelected = prevSelected.some(
         (selectedItem) => selectedItem._id === item._id
       );
-
-      const itemTotalPrice = item.product.price * item.quantity;
 
       if (isAlreadySelected) {
         return prevSelected.filter(
@@ -148,6 +151,12 @@ const CartScreen: React.FC = () => {
           )}
         />
       )}
+      <TextInput
+        placeholder="Enter delivery address"
+        value={address}
+        onChangeText={setAddress}
+        className="border border-gray-300 rounded-lg p-2 my-4"
+      />
       <TouchableOpacity
         className="bg-pink-300 py-3 px-5 rounded-lg shadow-md flex items-center justify-center"
         onPress={handleCheckout}
@@ -159,11 +168,6 @@ const CartScreen: React.FC = () => {
           <Text className="text-white font-semibold text-lg">Thanh toán</Text>
         )}
       </TouchableOpacity>
-      {/* {cartItems.length > 0 && (
-        <View>
-          <Text>Tổng cộng: ${total}</Text>
-        </View>
-      )} */}
       <Toast />
     </View>
   );

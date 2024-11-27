@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -18,9 +20,13 @@ export class OrderController {
 
   @UseGuards(AuthGuard)
   @Post()
-  async createOrder(@Req() req, @Body() cartItems: CartItem[]) {
+  async createOrder(
+    @Req() req,
+    @Body() body: { cartItems: CartItem[]; address: string },
+  ) {
+    const { cartItems, address } = body;
     const userId = req.user.id;
-    return this.orderService.create(userId, cartItems);
+    return this.orderService.create(userId, cartItems, address);
   }
 
   @UseGuards(AuthGuard)
@@ -44,6 +50,17 @@ export class OrderController {
   ) {
     const userId = req.user.id; // Lấy userId từ token JWT
     return this.orderService.getAll(userId);
+  }
+
+  @Get('/admin')
+  async getAll() {
+    return this.orderService.getAllForAdmin();
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body('status') status: string) {
+    console.log(id, status);
+    return this.orderService.update(id, status);
   }
 
   @UseGuards(AuthGuard)
