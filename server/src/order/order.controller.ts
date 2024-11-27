@@ -59,7 +59,6 @@ export class OrderController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body('status') status: string) {
-    console.log(id, status);
     return this.orderService.update(id, status);
   }
 

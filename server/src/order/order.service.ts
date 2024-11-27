@@ -8,12 +8,14 @@ import { Order, OrderStatus } from './entities/order.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Product, ProductDocument } from 'src/product/entities/product.entity';
 import { CartItem } from 'src/cart/schemas/cart-item.schema';
+import { OrderGateway } from './order.gateway';
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
+    private readonly ordersGateway: OrderGateway,
   ) {}
 
   async hasPurchasedProduct(
@@ -166,5 +168,7 @@ export class OrderService {
     // Cập nhật trạng thái đơn hàng
     order.status = status as OrderStatus;
     await order.save();
+    this.ordersGateway.emitOrderUpdate(order);
+    return order;
   }
 }

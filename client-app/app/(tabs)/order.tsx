@@ -10,7 +10,7 @@ import {
 import { router, useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import * as SecureStore from "expo-secure-store";
-
+import io from "socket.io-client";
 interface Order {
   id: string;
   status: string;
@@ -40,6 +40,22 @@ const OrderScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("new");
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false); // Trạng thái để kiểm tra việc refresh
+  const socket = io(`${process.env.EXPO_PUBLIC_API_URL}`, {
+    transports: ["websocket"],
+  });
+
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket");
+    });
+    socket.on("orderUpdated", (data) => {
+      console.log("Received order update:", data);
+      fetchOrders();
+    });
+    return () => {
+      socket.disconnect();
+    };
+  }, [socket]);
 
   const fetchOrders = async () => {
     setLoading(true);
