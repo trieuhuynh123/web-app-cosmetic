@@ -1,11 +1,15 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Tabs } from "expo-router";
+import { router, Tabs } from "expo-router";
 import { View, Text } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
 import { CartProvider } from "../context/CartContext";
 import React from "react";
+import io from "socket.io-client";
+import * as Notifications from "expo-notifications";
+import { Order } from "./order";
+
 const Layout = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -66,6 +70,39 @@ const Layout = () => {
     }, 840000);
     return () => clearInterval(intervalId);
   }, []);
+  const socket = io(`${process.env.EXPO_PUBLIC_API_URL}`, {
+    transports: ["websocket"],
+  });
+
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket");
+    });
+    socket.on("orderUpdated", async (data: Order) => {
+      const refresh_token = await SecureStore.getItemAsync(
+        "cosmetic_refresh_token"
+      );
+      if (
+        data.status === "shipping" &&
+        refresh_token === data.user.refresh_token
+      ) {
+        sendNotification(data.createDate);
+      }
+    });
+    return () => {
+      socket.disconnect();
+    };
+  }, [socket]);
+
+  const sendNotification = async (date: string) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Thông báo đơn hàng",
+        body: `Đơn hàng ${new Date(date).toLocaleString()} đang được giao`,
+      },
+      trigger: null, // Trigger ngay lập tức
+    });
+  };
 
   return (
     <>
@@ -240,6 +277,12 @@ const Layout = () => {
           />
           <Tabs.Screen
             name="products/[productId]"
+            options={{
+              href: null,
+            }}
+          />
+          <Tabs.Screen
+            name="password"
             options={{
               href: null,
             }}

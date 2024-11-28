@@ -5,46 +5,102 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 import 'pages/admin_page.dart';
-import 'pages/product_page.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter is initialized
   try {
     await dotenv.load(fileName: ".env"); // Load environment variables
   } catch (e) {
-    throw Exception('Error loading .env file: $e'); // Print error if any
+    throw Exception('Error loading .env file: $e');
   }
+
   runApp(const MyApp()); // Runs the app
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+  late IO.Socket socket;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+    _initializeSocket();
+  }
+
+  // Khởi tạo thông báo
+  void _initializeNotifications() {
+    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings(
+            'app_icon'); // Đảm bảo bạn đã thêm app_icon trong assets
+
+    final InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  // Khởi tạo và kết nối socket
+  void _initializeSocket() {
+    socket = IO.io('${dotenv.env['API_URL']}', <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': false,
+    });
+
+    socket.on('connect', (_) {
+      print('Kết nối Socket.IO thành công');
+    });
+
+    // Lắng nghe sự kiện "orderCreated" khi có đơn hàng mới
+    socket.on('orderCreated', (_) {
+      print('Đã có đơn hàng mới!');
+      _sendNotification('Đơn hàng mới', 'Có một đơn hàng mới được tạo.');
+    });
+
+    socket.connect();
+  }
+
+  // Phương thức gửi thông báo
+  Future<void> _sendNotification(String title, String body) async {
+    const AndroidNotificationDetails androidNotificationDetails =
+        AndroidNotificationDetails(
+      'admin_channel', // ID của channel
+      'Thông báo đơn hàng', // Tên channel
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const NotificationDetails notificationDetails =
+        NotificationDetails(android: androidNotificationDetails);
+
+    await flutterLocalNotificationsPlugin.show(
+      0, // ID thông báo
+      title,
+      body,
+      notificationDetails,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+      home: const LoginPage(), // Trang đăng nhập ban đầu
     );
   }
 }

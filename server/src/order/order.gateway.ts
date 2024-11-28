@@ -21,4 +21,8 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
   emitOrderUpdate(order: any) {
     this.server.emit('orderUpdated', order);
   }
+
+  emitOrderCreate(order: any) {
+    this.server.emit('orderCreated', order);
+  }
 }

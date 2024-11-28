@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { View, Text, Button, Alert } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { router } from "expo-router";
-
+import { CommonActions, useNavigation } from "@react-navigation/native";
 const ProfileScreen = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
-
+  const navigation = useNavigation();
   const fetchUserProfile = async () => {
     try {
       const response = await fetch(
@@ -44,6 +44,12 @@ const ProfileScreen = () => {
     await SecureStore.setItemAsync("loggedIn", "false");
     await SecureStore.deleteItemAsync("cosmetic_access_token");
     await SecureStore.deleteItemAsync("cosmetic_refresh_token");
+
+    navigation.dispatch(
+      CommonActions.reset({
+        routes: [{ key: "(tabs)", name: "(tabs)" }],
+      })
+    );
     router.push("/");
     Alert.alert("Success", "You have logged out successfully!");
   };

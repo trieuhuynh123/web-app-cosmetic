@@ -7,11 +7,13 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import { CommonActions, useNavigation } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const navigation = useNavigation();
   const handleLogin = async () => {
     // Kiểm tra định dạng email
     const isValidEmail = (email: string) => {
@@ -57,10 +59,14 @@ const LoginScreen = () => {
         setEmail("");
         setMessage("");
         setPassword("");
+        navigation.dispatch(
+          CommonActions.reset({
+            routes: [{ key: "(tabs)", name: "(tabs)" }],
+          })
+        );
         router.push("/profile");
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   return (
@@ -91,6 +97,13 @@ const LoginScreen = () => {
         }}
       >
         <Text style={styles.register}>Don't have an account? Sign Up</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => {
+          router.push("/password");
+        }}
+      >
+        <Text style={styles.register}>Quên mật khẩu</Text>
       </TouchableOpacity>
     </View>
   );
