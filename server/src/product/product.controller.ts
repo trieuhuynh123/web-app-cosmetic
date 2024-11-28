@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Query,
+  Delete,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { Product } from './entities/product.entity';
@@ -19,6 +20,15 @@ export class ProductController {
     return this.productService.create(product);
   }
 
+  @Get()
+  getAll(
+    @Query('categoryId') categoryId?: string,
+    @Query('brandId') brandId?: string,
+    @Query('name') name?: string,
+  ) {
+    return this.productService.getAll(categoryId, brandId, name);
+  }
+
   @Get('top-sold')
   async findTopSold(@Query('limit') limit?: number): Promise<Product[]> {
     return this.productService.findTopSoldProducts(limit);
@@ -27,6 +37,11 @@ export class ProductController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateProductDto: Product) {
     return this.productService.update(id, updateProductDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.productService.remove(id);
   }
 
   @Get('random')

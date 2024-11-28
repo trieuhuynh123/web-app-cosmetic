@@ -3,17 +3,19 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Order, OrderStatus } from './entities/order.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Product, ProductDocument } from 'src/product/entities/product.entity';
 import { CartItem } from 'src/cart/schemas/cart-item.schema';
+import { OrderGateway } from './order.gateway';
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
+    private readonly ordersGateway: OrderGateway,
   ) {}
 
   async hasPurchasedProduct(
@@ -31,7 +33,11 @@ export class OrderService {
     return !!order;
   }
 
-  async create(userId: string, cartItems: CartItem[]): Promise<Order> {
+  async create(
+    userId: string,
+    cartItems: CartItem[],
+    address: string,
+  ): Promise<Order> {
     let totalAmount = 0;
     const orderDetails = [];
 
@@ -46,6 +52,10 @@ export class OrderService {
       const totalPriceForItem = product.price * item.quantity; // Tính tổng tiền cho từng mục
       totalAmount += totalPriceForItem;
 
+      // Cập nhật số lượng bán của sản phẩm
+      product.sold = (product.sold || 0) + item.quantity;
+      await product.save();
+
       // Thêm vào chi tiết đơn hàng
       orderDetails.push({
         product: product.id, // ID sản phẩm
@@ -58,6 +68,7 @@ export class OrderService {
     const newOrder = new this.orderModel({
       user: userId, // ID của người dùng
       totalAmount, // Tổng số tiền
+      address,
       orderDetails, // Chi tiết đơn hàng
     });
 
@@ -95,6 +106,32 @@ export class OrderService {
 
     return groupedOrders;
   }
+
+  async getAllForAdmin() {
+    // Fetch all orders
+    const orders = await this.orderModel
+      .find()
+      .populate({
+        path: 'orderDetails.product', // Tên trường cần populate
+      })
+      .exec();
+
+    // Group orders by status and calculate total amount
+    const groupedOrders = orders.reduce(
+      (groups: { [key: string]: { orders: Order[] } }, order) => {
+        const status = order.status; // Assuming Order has a 'status' field
+        if (!groups[status]) {
+          groups[status] = { orders: [] };
+        }
+
+        groups[status].orders.push(order);
+        return groups;
+      },
+      {},
+    );
+
+    return groupedOrders;
+  }
   async cancelOrder(orderId: string, userId: string): Promise<Order> {
     const order = await this.orderModel.findOne({ id: orderId, user: userId });
 
@@ -119,5 +156,19 @@ export class OrderService {
     // Cập nhật trạng thái đơn hàng thành "canceled"
     order.status = OrderStatus.CANCELLED;
     return order.save(); // Lưu trạng thái mới vào cơ sở dữ liệu
+  }
+
+  async update(id: string, status: string) {
+    const order = await this.orderModel.findById(id);
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    // Cập nhật trạng thái đơn hàng
+    order.status = status as OrderStatus;
+    await order.save();
+    this.ordersGateway.emitOrderUpdate(order);
+    return order;
   }
 }

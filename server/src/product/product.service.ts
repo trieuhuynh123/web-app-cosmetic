@@ -25,6 +25,21 @@ export class ProductService {
     });
   }
 
+  async remove(id: string): Promise<{ message: string }> {
+    try {
+      // Tìm và xóa sản phẩm theo ID
+      const result = await this.productModel.findByIdAndDelete(id).exec();
+
+      if (!result) {
+        return { message: `Product with id ${id} not found.` };
+      }
+
+      return { message: `Product with id ${id} has been removed.` };
+    } catch (error) {
+      throw new Error(`Error deleting product: ${error.message}`);
+    }
+  }
+
   async findTopSoldProducts(limit: number = 10): Promise<Product[]> {
     return this.productModel.find().sort({ sold: -1 }).limit(limit).exec();
   }
@@ -71,5 +86,26 @@ export class ProductService {
         ...rest,
       };
     });
+  }
+
+  async getAll(categoryId: string, brandId: string, name: string) {
+    const query: any = {};
+
+    if (categoryId) {
+      query.category = categoryId; // Lọc theo category
+    }
+
+    if (brandId) {
+      query.brand = brandId; // Lọc theo brand
+    }
+
+    if (name) {
+      query.name = { $regex: name, $options: 'i' }; // Lọc theo tên sản phẩm
+    }
+    return this.productModel
+      .find(query)
+      .populate('category', 'name')
+      .populate('brand', 'name')
+      .exec();
   }
 }

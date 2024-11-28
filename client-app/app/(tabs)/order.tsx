@@ -7,13 +7,15 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import * as Notifications from "expo-notifications";
 import { router, useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import * as SecureStore from "expo-secure-store";
-
+import io from "socket.io-client";
 interface Order {
-  _id: string;
+  id: string;
   status: string;
+  address: string;
   orderDetails: {
     price: number;
     quantity: number;
@@ -36,8 +38,38 @@ interface GroupOrder {
 
 const OrderScreen: React.FC = () => {
   const [groupOrders, setGroupOrders] = useState<GroupOrder>();
-  const [activeTab, setActiveTab] = useState<string>();
+  const [activeTab, setActiveTab] = useState<string>("new");
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); // Trạng thái để kiểm tra việc refresh
+  const socket = io(`${process.env.EXPO_PUBLIC_API_URL}`, {
+    transports: ["websocket"],
+  });
+
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket");
+    });
+    socket.on("orderUpdated", (data: Order) => {
+      console.log("Received order update:", data.createDate);
+      fetchOrders();
+      if (data.status === "shipping") {
+        sendNotification(data.createDate);
+      }
+    });
+    return () => {
+      socket.disconnect();
+    };
+  }, [socket]);
+
+  const sendNotification = async (date: string) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Thông báo đơn hàng",
+        body: `Đơn hàng ${new Date(date).toLocaleString()} đang được giao`,
+      },
+      trigger: null, // Trigger ngay lập tức
+    });
+  };
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -60,7 +92,7 @@ const OrderScreen: React.FC = () => {
         {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${accessToken}`, // Thêm header Authorization với token
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       );
@@ -72,7 +104,6 @@ const OrderScreen: React.FC = () => {
       const data = await response.json();
 
       setGroupOrders(data);
-      // Filter orders based on the active tab
     } catch (error) {
       Toast.show({
         type: "error",
@@ -81,73 +112,87 @@ const OrderScreen: React.FC = () => {
       });
     } finally {
       setLoading(false);
+      setRefreshing(false); // Đảm bảo set lại trạng thái refreshing khi tải lại xong
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true); // Đánh dấu là đang refresh
+    await fetchOrders();
+  };
+
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(); // Lần đầu tiên khi màn hình được tải
   }, []);
 
   if (!groupOrders) {
     return (
-      <View>
-        <Text>Không có đơn nào</Text>
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-lg text-gray-500">Không có đơn nào</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.tabContainer}>
-        {Object.keys(groupOrders).map((key) => (
+    <View className="flex-1 p-4 bg-white">
+      <View className="flex-row justify-between mb-4">
+        {["new", "shipping", "delivered"].map((key, index) => (
           <TouchableOpacity
-            key={key}
-            style={[styles.tabButton, activeTab === key && styles.activeTab]}
+            key={index}
+            className={`flex-1 p-3 items-center border-b-2 ${
+              activeTab === key ? "border-blue-500" : "border-gray-300"
+            }`}
             onPress={() => setActiveTab(key)}
           >
-            <Text style={styles.tabText}>{key.toUpperCase()}</Text>
+            <Text className="text-sm font-semibold text-gray-700">
+              {key.toUpperCase()}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
+
       {Object.entries(groupOrders).map(([key, { orders, totalAmount }]) =>
-        key === activeTab ? ( // Chỉ hiển thị nội dung của tab đang active
+        key === activeTab ? (
           <View key={key}>
-            <Text>Tổng tiền: {totalAmount}</Text>
+            <Text className="text-lg font-bold text-gray-800 mb-4">
+              Tổng tiền: {totalAmount}
+            </Text>
             <FlatList
               data={orders}
-              keyExtractor={(item) => item._id}
+              className=" mb-48"
+              keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <View className="my-5 border">
-                  <Text>
+                <View className="mb-4 p-4 border border-gray-300 rounded-md">
+                  <Text className="text-sm text-gray-600">
                     Thời gian: {new Date(item.createDate).toLocaleString()}
                   </Text>
+                  <Text className="text-sm text-gray-600">
+                    Giao đến: {item.address}
+                  </Text>
                   {item.orderDetails.map((orderItem, index) => (
-                    <View
-                      key={index}
-                      style={{ flexDirection: "row", alignItems: "center" }}
-                    >
-                      <View>
-                        <TouchableOpacity
-                          onPress={() => {
-                            router.push(`/products/${orderItem.product.id}`);
-                          }}
-                        >
-                          <Image
-                            source={{
-                              uri: orderItem.product.image,
-                            }}
-                            style={{ width: 130, height: 130, marginRight: 10 }} // Added margin to space image from text
-                          />
-                        </TouchableOpacity>
-                      </View>
-                      <Text>
+                    <View key={index} className="flex-row items-center mt-2">
+                      <TouchableOpacity
+                        onPress={() => {
+                          router.push(`/products/${orderItem.product.id}`);
+                        }}
+                      >
+                        <Image
+                          source={{ uri: orderItem.product.image }}
+                          className="w-32 h-32 mr-4 rounded-md"
+                        />
+                      </TouchableOpacity>
+                      <Text className="text-sm text-gray-700">
                         {orderItem.product.name} x{orderItem.quantity}
                       </Text>
                     </View>
                   ))}
-                  <Text>Tổng tiền: {item.totalAmount}</Text>
+                  <Text className="text-lg font-semibold text-gray-800 mt-2">
+                    Tổng tiền: {item.totalAmount}
+                  </Text>
                 </View>
               )}
+              refreshing={refreshing} // Kết nối trạng thái refreshing vào FlatList
+              onRefresh={handleRefresh} // Gọi hàm handleRefresh khi kéo xuống
             />
           </View>
         ) : null
@@ -155,59 +200,5 @@ const OrderScreen: React.FC = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: "#fff",
-  },
-  tabContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  tabButton: {
-    flex: 1,
-    padding: 12,
-    alignItems: "center",
-    borderBottomWidth: 2,
-    borderBottomColor: "#ddd",
-  },
-  activeTab: {
-    borderBottomColor: "#0F8BBD0",
-  },
-  tabText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  emptyText: {
-    textAlign: "center",
-    marginTop: 50,
-    fontSize: 18,
-    color: "#888",
-  },
-  orderItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderColor: "#ddd",
-  },
-  orderDate: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 8,
-  },
-  orderDetails: {
-    fontSize: 16,
-    color: "#333",
-    marginBottom: 4,
-  },
-  orderTotal: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginTop: 8,
-  },
-});
 
 export default OrderScreen;

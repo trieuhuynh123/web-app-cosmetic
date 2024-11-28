@@ -28,6 +28,9 @@ export class User {
   @Prop()
   address: string;
 
+  @Prop({ default: false }) // Giá trị mặc định là `false`
+  isAdmin: boolean;
+
   @Prop()
   refresh_token: string;
 }
