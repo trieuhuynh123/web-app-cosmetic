@@ -71,6 +71,7 @@ export class OrderService {
       address,
       orderDetails, // Chi tiết đơn hàng
     });
+    this.ordersGateway.emitOrderCreate(newOrder);
 
     return newOrder.save(); // Lưu đơn hàng vào cơ sở dữ liệu
   }
@@ -159,7 +160,10 @@ export class OrderService {
   }
 
   async update(id: string, status: string) {
-    const order = await this.orderModel.findById(id);
+    const order = await this.orderModel
+      .findById(id)
+      .populate('user', 'refresh_token')
+      .exec();
 
     if (!order) {
       throw new Error('Order not found');

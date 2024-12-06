@@ -12,6 +12,7 @@ import * as SecureStore from "expo-secure-store";
 import { CartContext, CartItem } from "../context/CartContext";
 import CartItemComponent from "@/components/CartItem";
 import Toast from "react-native-toast-message";
+import { router } from "expo-router";
 
 const CartScreen: React.FC = () => {
   const { cartItems, cartCount, fetchCart } = useContext(CartContext);

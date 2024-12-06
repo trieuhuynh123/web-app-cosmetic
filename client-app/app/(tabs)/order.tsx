@@ -7,15 +7,14 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import * as Notifications from "expo-notifications";
-import { router, useRouter } from "expo-router";
+import { router } from "expo-router";
 import Toast from "react-native-toast-message";
 import * as SecureStore from "expo-secure-store";
-import io from "socket.io-client";
-interface Order {
+export interface Order {
   id: string;
   status: string;
   address: string;
+  user: { refresh_token: string };
   orderDetails: {
     price: number;
     quantity: number;
@@ -40,37 +39,7 @@ const OrderScreen: React.FC = () => {
   const [groupOrders, setGroupOrders] = useState<GroupOrder>();
   const [activeTab, setActiveTab] = useState<string>("new");
   const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false); // Trạng thái để kiểm tra việc refresh
-  const socket = io(`${process.env.EXPO_PUBLIC_API_URL}`, {
-    transports: ["websocket"],
-  });
-
-  useEffect(() => {
-    socket.on("connect", () => {
-      console.log("Connected to WebSocket");
-    });
-    socket.on("orderUpdated", (data: Order) => {
-      console.log("Received order update:", data.createDate);
-      fetchOrders();
-      if (data.status === "shipping") {
-        sendNotification(data.createDate);
-      }
-    });
-    return () => {
-      socket.disconnect();
-    };
-  }, [socket]);
-
-  const sendNotification = async (date: string) => {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Thông báo đơn hàng",
-        body: `Đơn hàng ${new Date(date).toLocaleString()} đang được giao`,
-      },
-      trigger: null, // Trigger ngay lập tức
-    });
-  };
-
+  const [refreshing, setRefreshing] = useState(false);
   const fetchOrders = async () => {
     setLoading(true);
     try {
